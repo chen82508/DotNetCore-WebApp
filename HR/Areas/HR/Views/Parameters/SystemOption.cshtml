@@ -1,0 +1,188 @@
+﻿@{
+    ViewData["Title"] = "系統選項維護";
+    ViewData["Area"] = ViewContext.RouteData.Values["area"]?.ToString();
+    ViewData["Controller"] = ViewContext.RouteData.Values["controller"]?.ToString();
+    ViewData["Action"] = ViewContext.RouteData.Values["action"]?.ToString();
+}
+
+<div id="OptionsOverView">
+    <div class="d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold py-3 mb-4">
+            <span class="text-muted fw-light">人力資源系統 /</span>
+            @ViewData["Title"]
+        </h4>
+        @*<button type="button" class="btn btn-primary" v-on:click="showModal('add', 0, 0, '')" data-bs-toggle="modal" data-bs-target="#MntModal">
+            <span class="tf-icons bx bx-add-to-queue"></span>
+            新增主項目
+            </button>*@
+    </div>
+
+    @*<div class="navbar navbar-expand-lg navbar-light navbar-detached bg-label-warning mb-3">
+        <div class="container-fluid">
+            <div class="collapse navbar-collapse">
+                <div class="d-flex">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="tf-icons bx bx-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Search...">
+                    </div>
+                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                    <button class="btn btn-outline-primary" type="submit">Search</button>
+                </div>
+            </div>
+        </div>
+    </div>*@
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+        <div v-for="m in main" class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center bg-label-info">
+                    <h5 class="mb-0">{{m.name}}</h5>
+                    <div class="btn-group">
+                        @*<button type="button" class="btn btn-icon btn-outline-primary" v-on:click="showModal('mnt', 0, m.id, m.name)" data-bs-toggle="modal" data-bs-target="#MntModal">
+                            <span class="tf-icons bx bx-edit"
+                            data-bs-toggle="tooltip"
+                            data-bs-offset="0,12"
+                            data-bs-placement="top"
+                            data-bs-html="true"
+                            data-bs-original-title="<span>編輯主要項目</span>"></span>
+                            </button>*@
+                        <button type="button" class="btn btn-icon btn-primary" v-on:click="showModal('add', m.id, 0, '')" data-bs-toggle="modal" data-bs-target="#MntModal" title="新增選項">
+                            <span :id="`add-icon-${m.id}`" class="tf-icons bx bx-add-to-queue"
+                                :data-bs-target="`#add-icon-${m.id}`"
+                                data-bs-toggle="tooltip"
+                                data-bs-offset="0,12"
+                                data-bs-placement="top"
+                                data-bs-html="true"
+                                data-bs-original-title="<span>新增選項</span>"></span>
+                        </button>
+                        @*<button type="button" class="btn btn-icon btn-danger" v-on:click="deleteData(0, m.id)">
+                            <span class="tf-icons bx bx-message-square-minus"
+                            data-bs-toggle="tooltip"
+                            data-bs-offset="0,12"
+                            data-bs-placement="top"
+                            data-bs-html="true"
+                            data-bs-dismiss="tooltip"
+                            data-bs-original-title="<span>刪除此主要項目</span>"></span>
+                            </button>*@
+                    </div>
+                </div>
+                <ul v-if="getSubs(m.id).length > 0" class="list-group list-group-flush">
+                    <li v-for="sub in getSubs(m.id)" class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>{{sub.name}}</span>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-icon btn-outline-secondary"
+                                    v-on:click="showModal('mnt', sub.tid, sub.id, sub.name)"
+                                    data-bs-toggle="modal" data-bs-target="#MntModal" title="編輯選項">
+                                    <span class="tf-icons bx bx-edit"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-offset="0,12"
+                                        data-bs-placement="top"
+                                        data-bs-html="true"
+                                        data-bs-dismiss="tooltip"
+                                        data-bs-original-title="<span>編輯選項</span>"></span>
+                                </button>
+                                <button type="button" class="btn btn-icon btn-danger" v-on:click="deleteData(sub.tid, sub.id)" title="刪除">
+                                    <span class="tf-icons bx bx-message-square-minus"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-offset="0,12"
+                                        data-bs-placement="top"
+                                        data-bs-html="true"
+                                        data-bs-dismiss="tooltip"
+                                        data-bs-original-title="<span>刪除選項</span>"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="MntModal" class="modal fade" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{used_item.opt === 'add' ? '新增' : '編輯'}}選項</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col mb-3">
+                                <label for="category-name" class="form-label"><span style="color: red">*</span>選項名稱</label>
+                                <input type="text" id="category-name" class="form-control" placeholder="請輸入選項名稱"
+                                       v-model.trim="used_item.name" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">關閉</button>
+                        <button v-if="used_item.opt === 'add'" type="button" class="btn btn-success" data-bs-dismiss="modal" v-on:click="addCatetory()">新增</button>
+                        <button v-else type="button" class="btn btn-success" data-bs-dismiss="modal" v-on:click="saveChange()">儲存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    let overview = Vue.createApp({
+        data() {
+            return {
+                main: [], subs: [],
+                used_item: { opt: '', tid: 0, id: 0, name: '' },
+            };
+        },
+        created() {
+            this.initialData();
+        },
+        methods: {
+            initialData() {
+                let self = this;
+                postMethod('/API/Params/OptionTags', toggleLoading(true), (res) => { self.main = res; }, true);
+                postMethod('/API/Params/Options', null, (res) => { self.subs = res; toggleLoading(false); }, true);
+            },
+            getSubs(tid) { return this.subs.filter(x => x.tid === tid); },
+            showModal(opt, tid, id, name) {
+                this.used_item.opt = opt;
+                this.used_item.tid = tid;
+                this.used_item.id = id;
+                this.used_item.name = name;
+            },
+            hasName() { return this.used_item.name !== '' },
+            addCatetory() {
+                if (!this.hasName()) {
+                    alert('選項名稱為必填欄位');
+                    return false;
+                }
+                
+                let self = this;
+                postMethod('/API/Params/Add/Option', null, (res) => { self.subs.push(res); }, false, { tid: this.used_item.tid, name: this.used_item.name });
+            },
+            saveChange() {
+                if (!this.hasName()) {
+                    alert('選項名稱為必填欄位');
+                    return false;
+                }
+
+                if (confirm("確定儲存此筆資料?")) {
+                    let self = this;
+                    patchMethod('/API/Params/Update/Option', { id: this.used_item.id, name: this.used_item.name }, (res) => {
+                        let newSub = self.subs.find(s => s.id === res.id);
+                        newSub.name = res.name;
+                    });
+                }
+            },
+            deleteData(tid, id) {
+                if (confirm("確定要刪除此筆資料?")) {
+                    let self = this;
+                    deleteMethod(`/API/Params/Delete/Option/${id}`, null, (res) => {
+                        console.log(`Delete option data: ${JSON.stringify(res)}`);
+                        setTimeout(() => {
+                            self.subs = self.subs.filter(s => s.id !== id);
+                        }, 150);
+                    });
+                }
+            }
+        },
+    }).mount('#OptionsOverView');
+</script>

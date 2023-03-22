@@ -1,0 +1,299 @@
+﻿@{
+    ViewData["Title"] = "一致性測驗";
+    Layout = "../../../../Views/Shared/Layout/_BlankLayout";
+}
+
+<div id="TestForm">
+    <div class="d-flex justify-content-center align-items-center">
+        <h4 class="fw-bold py-3 mb-4">一致性測驗</h4>
+    </div>
+    <div class="text-center fs-5 mb-4">
+        <span id="cd-minute">15</span>：<span id="cd-second">00</span>
+    </div>
+    <div class="card mb-5">
+        <div class="card-body">
+            <div id="stepperForm" class="bs-stepper linear">
+                <div class="bs-stepper-header" role="tablist">
+                    <div class="step" v-bind:class="{active: currStep === 1}" data-target="#form-step-1">
+                        <button type="button" class="step-trigger" role="tab" id="stepperFormTrigger1" aria-controls="form-step-1" aria-selected="true" v-bind:disabled="currStep !== 1">
+                            <span class="bs-stepper-circle">1</span>
+                            <span class="bs-stepper-label">第一步</span>
+                        </button>
+                    </div>
+                    <div class="bs-stepper-line"></div>
+                    <div class="step" v-bind:class="{active: currStep === 2}" data-target="#form-step-2">
+                        <button type="button" class="step-trigger" role="tab" id="stepperFormTrigger2" aria-controls="form-step-2" aria-selected="false" v-bind:disabled="currStep !== 2">
+                            <span class="bs-stepper-circle">2</span>
+                            <span class="bs-stepper-label">第二步</span>
+                        </button>
+                    </div>
+                    <div class="bs-stepper-line"></div>
+                    <div class="step" v-bind:class="{active: currStep === 3}" data-target="#form-step-3">
+                        <button type="button" class="step-trigger" role="tab" id="stepperFormTrigger3" aria-controls="form-step-3" aria-selected="false" v-bind:disabled="currStep !== 3">
+                            <span class="bs-stepper-circle">3</span>
+                            <span class="bs-stepper-label">第三步</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="bs-stepper-content">
+                    <div id="test-form">
+                        <div id="form-step-1" role="tabpanel" class="bs-stepper-pane fade dstepper-block active" aria-labelledby="stepperFormTrigger1">
+                            <div class="row text-center mb-3 fs-5 justify-content-center">
+                                <span class="text-center alert-info" style="width: fit-content">請先瀏覽下方清單3次，再圈出對你最重要的15個價值觀</span>
+                            </div>
+                            <div class="mb-3">
+                                <div v-for="ir in itemRows(laws)" class="row mb-2">
+                                    <div v-for="ci in consistItems(laws, ir - 1)" class="col-md-2" style="cursor: pointer; border: solid 1px; border-radius: .3rem;"
+                                         v-on:click="chooseLaw($event, ci.sn)" data-choosen="false">
+                                        <div class="text-center" style="pointer-events: none;">
+                                            <span>{{ci.title}}</span>
+                                        </div>
+                                        <div style="pointer-events: none;">
+                                            <small class="text-light">{{ci.description}}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <button class="btn btn-secondary btn-next-form" style="margin-right: 0.5rem" type="button" v-on:click="previous()">上一步</button>
+                                <button class="btn btn-primary btn-next-form" type="button" v-on:click="next()">下一步</button>
+                            </div>
+                        </div>
+                        <div id="form-step-2" role="tabpanel" class="bs-stepper-pane fade dstepper-block dstepper-none" aria-labelledby="stepperFormTrigger2">
+                            <div class="row text-center mb-3 fs-5 justify-content-center">
+                                <span class="text-center alert-info" style="width: fit-content">請從15個價值觀中剔除5個</span>
+                            </div>
+                            <div class="mb-3">
+                                <div v-for="ir in itemRows(choosen_laws)" class="row mb-2">
+                                    <div v-for="ci in consistItems(choosen_laws, ir - 1)" class="col-md-2"
+                                         style="cursor: pointer; border: solid 1px; border-radius: .3rem; background: #EDF9B3;"
+                                         v-on:click="eliminateLaw($event, ci.sn)" data-choosen="true">
+                                        <div class="text-center mt-3 mb-3" style="pointer-events: none;">
+                                            <span>{{ci.title}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <button class="btn btn-secondary btn-next-form" style="margin-right: 0.5rem" type="button" v-on:click="previous()">上一步</button>
+                                <button class="btn btn-primary btn-next-form" type="button" v-on:click="next()">下一步</button>
+                            </div>
+                        </div>
+                        <div id="form-step-3" role="tabpanel" class="bs-stepper-pane fade dstepper-block dstepper-none" aria-labelledby="stepperFormTrigger3">
+                            <div class="row text-center mb-3 fs-5 justify-content-center">
+                                <span class="text-center alert-info" style="width: fit-content">請編出最重要的順序，依序1~10</span>
+                            </div>
+                            <div class="mb-3">
+                                <div v-for="sl in sequence_laws" class="row justify-content-center mb-2">
+                                    <label class="col-md-2 col-form-label-lg">{{sl.title}}</label>
+                                    <div class="col-md-1 align-self-center">
+                                        <input :id="`law-seq-${sl.sn}`" class="form-control" placeholder="" min="1" max="10" type="number" v-model="sl.seq" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <button class="btn btn-secondary btn-next-form" style="margin-right: 0.5rem" type="button" v-on:click="previous()">上一步</button>
+                                <button class="btn btn-primary btn-next-form" type="button" v-on:click="submit()">提交</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="test-alert" class="bs-toast toast toast-placement-ex m-2 fade bg-warning top-0 start-50 translate-middle-x hide"
+         role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="bx bx-bell me-2"></i>
+            <div class="me-auto fw-semibold">提醒</div>
+        </div>
+        <div class="toast-body">{{alertMsg}}</div>
+    </div>
+</div>
+
+<script src="~/js/consistencyTest.js"></script>
+<script type="text/javascript">
+    $(function() {
+        $(document).on('keydown', disableF5);
+
+        const app = Vue.createApp({
+            data() {
+                return {
+                    countDown: 900,
+                    isFinish: false,
+                    laws: consistency_laws,
+                    choosen_laws: [],
+                    sequence_laws: [],
+                    currStep: 1,
+                    alertMsg: '',
+                };
+            },
+            created() {
+                this.startCountdown();
+            },
+            computed: {
+                step2_laws() { return this.choosen_laws.sort((a, b) => { return a.sn - b.sn; }); }
+            },
+            methods: {
+                itemRows(arr) { return Math.ceil(arr.length / 6) + 1; },
+                consistItems(arr, row_index) {
+                    const floor = row_index * 6;
+                    const ceil = floor + 6;
+
+                    return arr.filter(l => arr.indexOf(l) >= floor && arr.indexOf(l) < ceil);
+                },
+                chooseLaw(e, sn) {
+                    const choosen = JSON.parse($(e.target).attr('data-choosen').toLowerCase());
+
+                    if (choosen) {
+                        $(e.target).css('background', '');
+                        $(e.target).find('span').css('color', '');
+                        this.choosen_laws = this.choosen_laws.filter(cl => cl.sn !== sn);
+                    } else {
+                        if (this.choosen_laws.length === 15) {
+                            this.alertMsg = '只能圈選15項';
+                            showTestAlert();
+                            return false;
+                        }
+                        $(e.target).css('background', '#696CFF');
+                        $(e.target).find('span').css('color', '#FFF');
+                        const item = this.laws.find(l => l.sn === sn);
+                        this.choosen_laws.push({ ...item, selected: true });
+                    }
+
+                    $(e.target).attr('data-choosen', !choosen);
+                },
+                eliminateLaw(e, sn) {
+                    const choosen = JSON.parse($(e.target).attr('data-choosen').toLowerCase());
+                    let item = this.choosen_laws.find(cl => cl.sn === sn);
+                    if (choosen) {
+                        if (this.choosen_laws.filter(cl => !cl.selected).length === 5) {
+                            this.alertMsg = '只能剔除5項';
+                            showTestAlert();
+                            return false;
+                        }
+
+                        $(e.target).css('background', '');
+                        item.selected = false;
+                    } else {
+                        $(e.target).css('background', '#EDF9B3');
+                        item.selected = true;
+                    }
+
+                    $(e.target).attr('data-choosen', !choosen);
+                },
+                next() {
+                    if (this.currStep === 1) {
+                        if (this.choosen_laws.length !== 15) {
+                            this.alertMsg = '請圈選15項';
+                            showTestAlert();
+                            return false;
+                        }
+                    }
+
+                    if (this.currStep === 2) {
+                        if (this.choosen_laws.filter(cl => !cl.selected).length !== 5) {
+                            this.alertMsg = '請剔除5項';
+                            showTestAlert();
+                            return false;
+                        }
+
+                        const tmpSeqArr = this.sequence_laws;
+                        const arr = this.choosen_laws.filter(cl => cl.selected);
+                        this.sequence_laws = [];
+                        $.each(arr, (i) => {
+                            let sn = arr[i].sn;
+                            let seqObj = tmpSeqArr.find(sl => sl.sn === sn);
+                            if (!seqObj) {
+                                this.sequence_laws.push({ ...arr[i], seq: '' });
+                            }
+                            else {
+                                this.sequence_laws.push({ ...seqObj });
+                            }
+                        });
+                    }
+
+                    this.currStep++;
+                    showStepPanel(this.currStep);
+                },
+                previous() {
+                    this.currStep--;
+                    showStepPanel(this.currStep);
+                },
+                submit() {
+                    const seqArr = this.sequence_laws.map((sl) => {
+                        return sl.seq === '' ? 0 : sl.seq;
+                    });
+
+                    const seqSet = new Set(seqArr);
+                    if (seqSet.size != seqArr.length) {
+                        this.alertMsg = '各項目不可有相同的排序';
+                        showTestAlert();
+                        return false;
+                    }
+
+                    if (seqArr.filter(s => s > 10).length > 0 || seqArr.filter(s => s < 1).length > 0) {
+                        this.alertMsg = '排序數字需介於1~10';
+                        showTestAlert();
+                        return false;
+                    }
+
+                    this.isFinish = true;
+                    this.sendData();
+                },
+                startCountdown() {
+                    const interval = setInterval(() => {
+                        if (!this.isFinish) {
+                            this.countDown--;
+                        }
+                        const minute = Math.floor(this.countDown / 60);
+                        $('#cd-minute').html(minute.toString().padStart(2, '0'));
+                        $('#cd-second').html((this.countDown - minute * 60).toString().padStart(2, '0'));
+
+                        if (this.countDown === 0) {
+                            clearInterval(interval);
+                            console.log('Ding!');
+                            this.sendData();
+                        }
+                    }, 1000);
+                },
+                sendData() {
+                    $.ajax({
+                        url: '/API/ConsistencyTest/ReceiveTestData',
+                        method: 'POST',
+                        async: true,
+                        data: {
+                            'testContent': JSON.stringify({
+                                choosen: this.choosen_laws,
+                                sequence: this.sequence_laws,
+                                left_seconds: this.countDown,
+                            })
+                        },
+                        beforeSend: toggleLoading(true),
+                        success: (res) => {
+                            toggleLoading(false);
+                            const protocol = $(location).attr('protocol');
+                            const host = $(location).attr('host');
+                            $(location).attr('href', `${protocol}//${host}${res.goTo}`);
+                        },
+                        error: (err) => { console.log(err); },
+                    });
+                },
+            },
+        });
+        app.mount('#TestForm');
+    });
+
+    function showStepPanel(step) {
+        $('.bs-stepper-pane').removeClass('active');
+        setTimeout(() => {
+            $('.bs-stepper-pane').removeClass('dstepper-block').addClass('dstepper-none');
+            $(`.bs-stepper-pane[id="form-step-${step}"]`).removeClass('dstepper-none').addClass('dstepper-block active');
+        }, 400);
+    }
+
+    function showTestAlert() {
+        $('#test-alert').toast({ delay: 2000 });
+        $('#test-alert').toast('show');
+    }
+</script>

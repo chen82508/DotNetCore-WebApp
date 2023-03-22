@@ -1,0 +1,629 @@
+﻿@{
+    ViewData["Title"] = "履歷進件";
+    ViewData["Area"] = ViewContext.RouteData.Values["area"]?.ToString();
+    ViewData["Controller"] = ViewContext.RouteData.Values["controller"]?.ToString();
+    ViewData["Action"] = ViewContext.RouteData.Values["action"]?.ToString();
+
+    Layout = "../../../../Views/Shared/Layout/_Layout";
+}
+
+<div id="ResumeOverView">
+    <div v-if="resumes.length > 0" class="card mb-4">
+        <div class="table-responsive text-nowrap">
+            <table v-if="jobs.length > 0" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>姓名</th>
+                        <th>應徵職缺</th>
+                        <th>進件日期</th>
+                        <th>動作</th>
+                    </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                    <tr v-cloak v-for="r in resumes">
+                        <td>{{getBaseInfo(r.id).name}}</td>
+                        <td>{{jobName(r.id)}}</td>
+                        <td>{{r.date}}</td>
+                        <td>
+                            <button class="btn rounded-pill btn-icon btn-info m-1" type="button" v-on:click="openResumeVies(r.id)"
+                                    data-bs-target="#ResumeView" data-bs-toggle="modal">
+                                <span class="tf-icon bx bx-search" style="pointer-events: none;"></span>
+                            </button>
+                            <a class="btn rounded-pill btn-icon btn-secondary m-1" :href="`/API/Resume/Print/${r.id}`" title="列印履歷">
+                                <span class="tf-icon bx bx-printer"></span>
+                            </a>
+                            @*<button class="btn rounded-pill btn-icon btn-danger m-1" type="button" v-on:click="deleteResume(r.id)">
+                                <span class="tf-icon bx bx-minus" style="pointer-events: none;"></span>
+                            </button>*@
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div v-if="paginate.total > 1" class="card">
+        <div class="row">
+            <div class="demo-inline-spacing">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        <!-- 第一頁 -->
+                        <li v-if="paginate.total > 5 && paginate.prev !== 0" class="page-item first">
+                            <a class="page-link" href="javascript:void(0);" v-on:click="switchPage(1)"><i class="tf-icon bx bx-chevrons-left"></i></a>
+                        </li>
+                        <!-- 上一頁 -->
+                        <li v-if="paginate.prev !== 0" class="page-item prev">
+                            <a v-if="paginate.prev < 1" class="page-link" href="javascript:void(0);"><i class="tf-icon bx bx-chevron-left"></i></a>
+                            <a v-else class="page-link" href="javascript:void(0);" v-on:click="switchPage(paginate.prev)"><i class="tf-icon bx bx-chevron-left"></i></a>
+                        </li>
+                        <!-- 省略符號 -->
+                        <li v-if="paginate.total > 5 && paginate.current - 1 > 2" class="page-item">
+                            <div class="justify-content-center align-items-center" style="padding: 0.3875rem; margin-left: 0.1875rem;">
+                                <i class="tf-icons bx bx-dots-horizontal-rounded"></i>
+                            </div>
+                        </li>
+                        <!-- 頁碼 -->
+                        <li v-for="p in midPageIndexes" class="page-item" v-bind:class="{active: paginate.current === p}">
+                            <a class="page-link" href="javascript:void(0);" v-on:click="switchPage(p)">{{p}}</a>
+                        </li>
+                        <!-- 省略符號 -->
+                        <li v-if="paginate.total > 5 && paginate.total - paginate.current > 2" class="page-item">
+                            <div class="justify-content-center align-items-center" style="padding: 0.3875rem; margin-left: 0.1875rem;">
+                                <i class="tf-icons bx bx-dots-horizontal-rounded"></i>
+                            </div>
+                        </li>
+                        <!-- 下一頁 -->
+                        <li v-if="paginate.next <= paginate.total" class="page-item next">
+                            <a v-if="paginate.next > paginate.total" class="page-link" href="javascript:void(0);"><i class="tf-icon bx bx-chevron-right"></i></a>
+                            <a v-else class="page-link" href="javascript:void(0);" v-on:click="switchPage(paginate.next)"><i class="tf-icon bx bx-chevron-right"></i></a>
+                        </li>
+                        <!-- 最後一頁 -->
+                        <li v-if="paginate.total > 5 && paginate.current != paginate.total" class="page-item last">
+                            <a class="page-link" href="javascript:void(0);" v-on:click="switchPage(paginate.total)"><i class="tf-icon bx bx-chevrons-right"></i></a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <div id="ResumeView" class="modal fade" aria-hidden="true" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable modal-xl" role="document">
+            <div class="modal-content">
+                <div v-if="viewResume" class="modal-body">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item">
+                            <button type="button" class="nav-link active" role="tab" aria-controls="baseInfo" aria-selected="true"
+                                    data-bs-toggle="tab" data-bs-target="#baseInfo">
+                                基本資料
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button type="button" class="nav-link" role="tab" aria-controls="experience" aria-selected="false"
+                                    data-bs-toggle="tab" data-bs-target="#experience">
+                                工作經驗
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button type="button" class="nav-link" role="tab" aria-controls="status" aria-selected="false"
+                                    data-bs-toggle="tab" data-bs-target="#status">
+                                特殊身分與現況
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button type="button" class="nav-link" role="tab" aria-controls="qa" aria-selected="false"
+                                    data-bs-toggle="tab" data-bs-target="#qa">
+                                意向問答
+                            </button>
+                        </li>
+                        <li v-if="attachments.length > 0" class="nav-item">
+                            <button type="button" class="nav-link" role="tab" aria-controls="attachments" aria-selected="false"
+                                    data-bs-toggle="tab" data-bs-target="#attachments">
+                                其他附件
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button type="button" class="nav-link" role="tab" aria-controls="test" aria-selected="false"
+                                    data-bs-toggle="tab" data-bs-target="#test">
+                                一致性測驗
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade active show" id="baseInfo" role="tabpanel">
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>應徵職位</strong></td>
+                                        <td colspan="3">{{jobName(view.id)}}</td>
+                                        <td class="col-md-4" rowspan="3" colspan="2">
+                                            <img class="img-fluid w-50" :src="`data:${view.photo.contentType};base64, ${view.photo.src}`" alt="個人相片" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>姓名</strong></td>
+                                        <td>{{view.baseInfo.name}}</td>
+                                        <td><strong>出生日期</strong></td>
+                                        <td>{{view.baseInfo.birthday}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>性別</strong></td>
+                                        <td>{{view.baseInfo.sex === '1' ? '男' : '女'}}</td>
+                                        <td><strong>Email</strong></td>
+                                        <td>{{view.baseInfo.email.account}}@@{{view.baseInfo.email.host}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>婚姻狀況</strong></td>
+                                        <td>{{view.baseInfo.marriage === '1' ? '未婚' : view.baseInfo.marriage === '1' ? '已婚' : '已有子女'}}</td>
+                                        <td><strong>地址</strong></td>
+                                        <td>{{view.baseInfo.address}}</td>
+                                        <td><strong>電話</strong></td>
+                                        <td>{{view.baseInfo.phone}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>最高學歷1</strong></td>
+                                        <td>{{view.baseInfo.edu1.school}}</td>
+                                        <td>{{view.baseInfo.edu1.major}}</td>
+                                        <td>{{view.baseInfo.edu1.don === '0' ? '日' : '夜'}}間部</td>
+                                        <td>{{view.baseInfo.edu1.goq === '0' ? '肄' : '畢'}}業</td>
+                                        <td>{{view.baseInfo.edu1.start}} 至 {{view.baseInfo.edu1.end}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>最高學歷2</strong></td>
+                                        <td>{{view.baseInfo.edu2.school}}</td>
+                                        <td>{{view.baseInfo.edu2.major}}</td>
+                                        <td>{{view.baseInfo.edu2.don === '0' ? '日' : '夜'}}間部</td>
+                                        <td>{{view.baseInfo.edu2.goq === '0' ? '肄' : '畢'}}業</td>
+                                        <td>{{view.baseInfo.edu2.start}} 至 {{view.baseInfo.edu2.end}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="tab-pane fade" id="experience" role="tabpanel">
+                            <p v-if="view.experiences.length === 0">無工作經驗</p>
+                            <table v-else class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>服務機關</th>
+                                        <th>職稱</th>
+                                        <th>服務時間</th>
+                                        <th>待遇</th>
+                                        <th>離職原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="exp in view.experiences">
+                                        <td>{{exp.agency}}</td>
+                                        <td>{{exp.jobTitle}}</td>
+                                        <td>自 {{exp.period_start}} 至 {{exp.period_end}}</td>
+                                        <td>{{exp.salary.standard === '0' ? '月薪' : '年薪'}} {{exp.salary.amount}}</td>
+                                        <td>{{exp.leaving_reason}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="tab-pane fade" id="status" role="tabpanel">
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <td class="col-md-2"><strong>特殊身分</strong></td>
+                                        <td class="col-md-4" v-html="specialIdentities"></td>
+                                        <td class="col-md-2"><strong>經濟狀況</strong></td>
+                                        <td class="col-md-4" v-html="economicStatus"></td>
+                                    </tr>
+                                    <tr>
+                                        <td v-if="view.baseInfo.sex === '1'"><strong>兵役狀況</strong></td>
+                                        <td v-if="view.baseInfo.sex === '1'" v-html="militaryService"></td>
+                                        <td><strong>對工作最重視的項目為何</strong></td>
+                                        <td v-bind:colspan="view.baseInfo.sex !== '1' ? 3 : 0" v-html="focusContent"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="form-group row mb-2">
+                                <label class="d-block">專業證照</label>
+                                <div class="col-md-4">
+                                    <label class="col-md-4 col-form-label-lg">金融類</label>
+                                    <ul v-if="view.status.license.financial.length > 0" class="nav nav-pills mb-3">
+                                        <li v-for="l in view.status.license.financial" class="nav-item">
+                                            <button class="btn rounded-pill btn-outline-info m-1" type="button" style="cursor: default;">{{l}}</button>
+                                        </li>
+                                    </ul>
+                                    <div v-else>無</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="col-md-4 col-form-label-lg">不動產類</label>
+                                    <ul v-if="view.status.license.realEstate.length > 0" class="nav nav-pills mb-3">
+                                        <li v-for="l in view.status.license.realEstate" class="nav-item">
+                                            <button class="btn rounded-pill btn-outline-info m-1" type="button" style="cursor: default;">{{l}}</button>
+                                        </li>
+                                    </ul>
+                                    <div v-else>無</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="col-md-4 col-form-label-lg">資訊類</label>
+                                    <ul v-if="view.status.license.IT.length > 0" class="nav nav-pills mb-3">
+                                        <li v-for="l in view.status.license.IT" class="nav-item">
+                                            <button class="btn rounded-pill btn-outline-info m-1" type="button" style="cursor: default;">{{l}}</button>
+                                        </li>
+                                    </ul>
+                                    <div v-else>無</div>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <div class="col-md-4">
+                                    <label class="col-md-4 col-form-label-lg">法律類</label>
+                                    <ul v-if="view.status.license.legal.length > 0" class="nav nav-pills mb-3">
+                                        <li v-for="l in view.status.license.legal" class="nav-item">
+                                            <button class="btn rounded-pill btn-outline-info m-1" type="button" style="cursor: default;">{{l}}</button>
+                                        </li>
+                                    </ul>
+                                    <div v-else>無</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="col-md-4 col-form-label-lg">其他</label>
+                                    <ul v-if="view.status.license.other.length > 0" class="nav nav-pills mb-3">
+                                        <li v-for="l in view.status.license.other" class="nav-item">
+                                            <button class="btn rounded-pill btn-outline-info m-1" type="button" style="cursor: default;">{{l}}</button>
+                                        </li>
+                                    </ul>
+                                    <div v-else>無</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="qa" role="tabpanel">
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <td class="col-md-2"><strong>每月固定支出</strong></td>
+                                        <td class="col-md-4">{{view.qa.charges}}</td>
+                                        <td class="col-md-2"><strong>如獲任用，何時可以報到？</strong></td>
+                                        <td class="col-md-4">{{view.qa.registration_day}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>您期望的薪資待遇</strong></td>
+                                        <td>{{expectedSalary}}</td>
+                                        <td><strong>是否曾有任何犯罪紀錄，或其他違法及訴訟案件？</strong></td>
+                                        <td>{{criminalRecord}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>是否同意本公司於錄取後聯繫你前公司或主管，讓我們更了解你是否可勝任此職務？</strong></td>
+                                        <td>{{notifyPerson}}</td>
+                                        <td><strong>專業進修</strong></td>
+                                        <td v-html="advancedStudies"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>個人網址</strong></td>
+                                        <td colspan="3" v-html="personalUrls"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="form-group row mb-2">
+                                <label class="d-block">應徵動機</label>
+                                <div class="col-md-12">
+                                    <p>{{view.qa.motivation}}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-if="attachments.length > 0" class="tab-pane fade" id="attachments" role="tabpanel">
+                            <ul v-if="attachments.length > 0" class="nav nav-pills mb-3">
+                                <li v-for="attach in attachments" class="nav-item">
+                                    <a class="btn rounded-pill btn-outline-info m-1" :href="`/API/Resume/Download/${attach.id}/${attach.seq}`"
+                                    :title="`[下載]${attach.name}.{attach.extension}`" target="_blank" style="cursor: default;">
+                                        {{attach.name}}
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="tab-pane fade" id="test" role="tabpanel">
+                            <div class="form-group row mb-3">
+                                <div class="col-md-12">
+                                    <p>測驗耗時 {{testTotalTime}}</p>
+                                </div>
+                            </div>
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <td>第一階段 (選擇15項)</td>
+                                        <td v-html="testStage1"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>第二階段 (剔除5項)</td>
+                                        <td v-html="testStage2"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>第三階段 (排序)</td>
+                                        <td v-html="testStage3"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" v-on:click="viewResume = !viewResume" data-bs-dismiss="modal">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    const app = Vue.createApp({
+        data() {
+            return {
+                viewResume: false,
+                jobs: [],
+                paginate: { total: 0, current: 1, prev: 0, next: 2, size: 10 },
+                search: { name: '', tel: '', job: '' },
+                resumes: [],
+                view: { id: '', photo: {}, baseInfo: {}, experiences: [], status: {}, qa: {} },
+                attachments: [],
+                test: { stage1: [], stage2: [], stage3: [], seconds: 0 },
+            }
+        },
+        created() { this.initialData(); },
+        computed: {
+            midPageIndexes() {
+                const cp = this.paginate.current;
+                const pc = this.paginate.total;
+                const si = cp - 2 <= 0 ? 1 : (cp - 2) > (pc - 5) ? pc - 5 + 1 : cp - 2;
+                const ei = cp + 2 > pc ? pc : (cp + 2) <= (pc - 5) ? pc - 5 + 1 : cp + 2;
+                const arrLen = ei - si + 1;
+
+                if (pc > 5) { return Array.from({ length: (arrLen < 5 ? 5 : arrLen) }, (_, i) => i + si); }
+                else { return Array.from({ length: pc }, (_, i) => i + si); }
+            },
+            specialIdentities() {
+                let identities = '';
+                $.each(this.view.status.special.id, (i, val) => {
+                    identities += identities ? '<br>' : '';
+                    switch (`${val}`) {
+                        case "0":
+                            identities += '無';
+                            break;
+                        case "1":
+                            identities += '原住民';
+                            break;
+                        case "2":
+                            identities += '身心障礙';
+                            break;
+                        case "3":
+                            identities += '外籍人士';
+                            break;
+                        case "4":
+                            identities += `${其他}：${this.view.status.special.other}`;
+                            break;
+                    }
+                });
+                return identities;
+            },
+            economicStatus() {
+                let eco = '';
+                $.each(this.view.status.eco, (i, val) => {
+                    eco += eco ? '<br>' : '';
+                    switch (`${val}`) {
+                        case '1':
+                            eco += '自給自足';
+                            break;
+                        case '2':
+                            eco += '負擔父母/妻兒';
+                            break;
+                        case '3':
+                            eco += '租屋/房貸壓力';
+                            break;
+                        case '4':
+                            eco += '無經濟壓力';
+                            break;
+                    }
+                });
+                return eco;
+            },
+            militaryService() {
+                let ms = '';
+                switch (`${this.view.status.ms.state}`) {
+                    case '1':
+                        ms += '役畢';
+                        break;
+                    case '2':
+                        ms += '未役';
+                        break;
+                    case '3':
+                        ms += `免役，原因：${this.view.status.ms.reason}`;
+                        break;
+                }
+                return ms;
+            },
+            focusContent() {
+                let fc = '';
+                $.each(this.view.status.focus.items, (i, val) => {
+                    fc += fc ? '<br>' : '';
+                    switch (`${val}`) {
+                        case '1':
+                            fc += '擔負更大的責任';
+                            break;
+                        case '2':
+                            fc += '薪資';
+                            break;
+                        case '3':
+                            fc += '工作保障';
+                            break;
+                        case '4':
+                            fc += '新領域與挑戰性';
+                            break;
+                        case '5':
+                            fc += '訓練與發展機會';
+                            break;
+                        case '6':
+                            fc += '工作地點';
+                            break;
+                        case '7':
+                            fc += `其他：${this.view.status.focus.other}`;
+                            break;
+                    }
+                });
+                return fc;
+            },
+            expectedSalary() {
+                return this.view.qa.expected_salary.negotiable ? '面議' : `${this.view.qa.expected_salary.lowest} ~ ${this.view.qa.expected_salary.highest}`;
+            },
+            criminalRecord() {
+                return this.view.qa.criminal_record.exists === '0' ? '否' : `是，原因：${this.view.qa.criminal_record.reason}`;
+            },
+            notifyPerson() {
+                return this.view.qa.notify.agree === '0' ? '否' : `是，照會公司/主管名稱：${this.view.qa.notify.name}`;
+            },
+            advancedStudies() {
+                let studies = '';
+                $.each(this.view.qa.advanced_study, (i, s) => {
+                    studies += studies ? '<br>' : '';
+                    studies += s;
+                });
+                if (studies) {
+                    return studies;
+                }
+                return '無';
+            },
+            personalUrls() {
+                let urls = '';
+                $.each(this.view.qa.personal_urls, (i, u) => {
+                    urls += urls ? '<br>' : '';
+                    urls += u;
+                });
+                if (urls) {
+                    return urls;
+                }
+                return '無';
+            },
+            testTotalTime() {
+                const minutes = parseInt(this.test.seconds / 60);
+                const seconds = this.test.seconds % 60;
+                return `${(minutes > 0 ? `${minutes}：` : '')}${seconds}`;
+            },
+            testStage1() {
+                let content=  '';
+                const arr = this.test.stage1;
+                $.each(arr, (i, s) => {
+                    content += content && i !== (arr.length) ? '、' : '';
+                    content += i % 5 === 0 && i !== 0 && i !== (arr.length - 1) ? '<br>' : '';
+                    content += s;
+                });
+                return content;
+            },
+            testStage2() {
+                let content = '';
+                const arr = this.test.stage2;
+                $.each(arr, (i, s) => {
+                    content += content && i !== (arr.length) ? '、' : '';
+                    content += s;
+                });
+                return content;
+            },
+            testStage3() {
+                let content = '';
+                const arr = this.test.stage3.sort((a, b) => { return a.seq > b.seq ? 1 : -1; });
+                $.each(arr, (i, s) => {
+                    content += content ? '<br>' : '';
+                    content += `${s.seq} - ${s.title}`;
+                });
+                return content;
+            },
+        },
+        methods: {
+            initialData() {
+                postMethod('/API/Resume/ResumeList', toggleLoading(true), (res) => { this.infos = res; }, true);
+                postMethod('/API/Resume/FrontendResume/Total', null, (res) => {
+                    this.paginate.total = parseInt(res / this.paginate.size) + 1 * (res % this.paginate.size > 0);
+                }, true);
+                postMethod('/API/Job/JobInfos/All', null, (res) => { console.log(res); this.jobs = res; }, true);
+                getMethod('/API/Resume/FrontendResume', null, (res) => { this.resumes = res; toggleLoading(false); }, true);
+            },
+            getResume(id) { return this.resumes.find(r => r.id === id); },
+            getBaseInfo(id) { return JSON.parse(this.getResume(id).baseInfo); },
+            getExperiences(id) { return JSON.parse(this.getResume(id).experiences); },
+            getStatus(id) { return JSON.parse(this.getResume(id).status); },
+            getQA(id) { return JSON.parse(this.getResume(id).qa); },
+            jobName(id) {
+                const jobSn = this.getBaseInfo(id).apply_job;
+                const job = this.jobs.find(j => j.id === jobSn);
+                if (job) {
+                    return job.name;
+                }
+                return '(職缺已關閉)';
+            },
+            searchByConditions() {
+                this.paginate.current = 1;
+                const formData = {
+                    conditions: this.search,
+                    pagination: { current: 1, size: 10, },
+                };
+                postMethod('/API/Resume/ResumeList', toggleLoading(true), (res) => { this.infos = res; }, true, formData);
+                postMethod('/API/Resume/FrontendResume/Total', null, (res) => {
+                    this.paginate.total = parseInt(res / this.paginate.size) + 1 * (res % this.paginate.size > 0);
+                    toggleLoading(false);
+                }, true, formData);
+            },
+            openResumeVies(id) {
+                this.viewResume = true;
+                this.view.id = id;
+                this.view.baseInfo = this.getBaseInfo(id);
+                this.view.experiences = this.getExperiences(id);
+                this.view.status = this.getStatus(id);
+                this.view.qa = this.getQA(id);
+
+                this.showPhoto(id);
+                this.getResumeAttachments(id);
+                this.getTestProcess(id);
+            },
+            deleteResume(id) {
+                deleteMethod(`/API/Resume/Delete/${id}`, null, (res) => {
+                    console.log('成功移除一組履歷');
+                    this.resumes = this.resumes.filter(r => r.id !== id);
+                });
+            },
+            showPhoto(id) {
+                let resume = this;
+                $.ajax({
+                    url: `/API/Resume/Photo/${id}`,
+                    method: 'GET',
+                    success: function (res) { resume.view.photo = res; }
+                });
+            },
+            getResumeAttachments(id) {
+                let appData = this;
+                $.ajax({
+                    url: `/API/Resume/Attachment/${id}`,
+                    method: 'GET',
+                    success: function (res) {
+                        appData.attachments = res;
+                    }
+                });
+            },
+            getTestProcess(id) {
+                let appData = this;
+                $.ajax({
+                    url: `/API/Resume/Test/${id}`,
+                    method: 'GET',
+                    success: function (res) {
+                        appData.test.stage1 = JSON.parse(res.choosen).map((c) => { return c.title; });
+                        appData.test.stage2 = JSON.parse(res.exculde).map((e) => { return e.title; });
+                        appData.test.stage3 = JSON.parse(res.sequence).map((s) => { return { title: s.title, seq: s.seq}; });
+                        appData.test.seconds = res.seconds;
+                    }
+                });
+            },
+            switchPage(p) {
+                this.paginate.current = p;
+                this.paginate.prev = p - 1;
+                this.paginate.next = p + 1;
+                const formData = {
+                    conditions: this.search,
+                    pagination: { current: p, size: 10, },
+                };
+                postMethod('/API/Resume/ResumeList', toggleLoading(true), (res) => {
+                    this.resumes = res;
+                    toggleLoading(false);
+                }, true, formData);
+            },
+        }
+    });
+    app.mount('#ResumeOverView');
+</script>

@@ -1,0 +1,229 @@
+﻿@{
+    Layout = "../../../../Views/Shared/Layout/_Layout";
+}
+<div id="FormCreateSteps">
+    <div class="card mb-5">
+        <div class="card-header d-flex justify-content-between">
+            <h3>建立試用期考核單</h3>
+        </div>
+        <div class="card-body">
+            <div id="stepperForm" class="bs-stepper linear">
+                <div class="bs-stepper-header" role="tablist">
+                    <div class="step" v-bind:class="{active: currStep === 1}" data-target="#form-step-1">
+                        <button type="button" class="step-trigger" role="tab" id="stepperFormTrigger1" aria-controls="form-step-1" aria-selected="true" v-bind:disabled="currStep !== 1">
+                            <span class="bs-stepper-circle">1</span>
+                            <span class="bs-stepper-label">受考核人資料</span>
+                        </button>
+                    </div>
+                    <div class="bs-stepper-line"></div>
+                    <div class="step" v-bind:class="{active: currStep === 2}" data-target="#form-step-2">
+                        <button type="button" class="step-trigger" role="tab" id="stepperFormTrigger2" aria-controls="form-step-2" aria-selected="false" v-bind:disabled="currStep !== 2">
+                            <span class="bs-stepper-circle">2</span>
+                            <span class="bs-stepper-label">考核主管資料</span>
+                        </button>
+                    </div>
+                    <div class="bs-stepper-line"></div>
+                    <div class="step" v-bind:class="{active: currStep === 3}" data-target="#form-step-3">
+                        <button type="button" class="step-trigger" role="tab" id="stepperFormTrigger3" aria-controls="form-step-3" aria-selected="false" v-bind:disabled="currStep !== 3">
+                            <span class="bs-stepper-circle">3</span>
+                            <span class="bs-stepper-label">提送</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="bs-stepper-content">
+                    <div id="probation-form">
+                        <div id="form-step-1" role="tabpanel" class="bs-stepper-pane fade dstepper-block active" aria-labelledby="stepperFormTrigger1">
+                            <div class="form-group row mb-2">
+                                <div class="col-md-4">
+                                    <label for="emp-id">
+                                        <span class="text-danger font-weight-bold">*</span>員編
+                                    </label>
+                                    <input id="emp-id" type="text" class="form-control" placeholder="請輸入員工編號" v-model="empId" required>
+                                    <div class="invalid-feedback">請輸入受考核人的員工編號</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="emp-name">
+                                        <span class="text-danger font-weight-bold">*</span>姓名
+                                    </label>
+                                    <input id="emp-name" type="text" class="form-control" placeholder="請輸入員工姓名" v-model="empName" required>
+                                    <div class="invalid-feedback">請輸入受考核人的姓名</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="emp-jobtitle">
+                                        <span class="text-danger font-weight-bold">*</span>職位
+                                    </label>
+                                    <input id="emp-jobtitle" type="text" class="form-control" placeholder="請輸入員工職位" v-model="empJobTitle" required>
+                                    <div class="invalid-feedback">請輸入受考核人的職位</div>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <div class="col-md-6">
+                                    <label for="period-start">
+                                        <span class="text-danger font-weight-bold">*</span>試用期間
+                                    </label>
+                                    <div class="input-group">
+                                        <input id="period-start" type="date" class="form-control" v-model="period.start" required>
+                                        <label for="period-end" class="input-group-text">至</label>
+                                        <input id="period-end" type="date" class="form-control" style="border-bottom-right-radius: 0.375rem; border-top-right-radius: 0.375rem;"
+                                               v-model="period.end" required>
+                                        <div class="invalid-feedback">請選擇受考核人的試用期間</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="emp-dept">
+                                        <span class="text-danger font-weight-bold">*</span>部門
+                                    </label>
+                                    <input id="emp-dept" type="text" class="form-control" placeholder="請輸入員工所屬部門" v-model="empDept" required>
+                                    <div class="invalid-feedback">請輸入受考核人的所屬部門</div>
+                                </div>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label for="emp-email"><span class="text-danger font-weight-bold">*</span>Email</label>
+                                <input id="emp-email" type="email" class="form-control" placeholder="請輸入Email" v-model="empEmail" required>
+                                <div class="invalid-feedback">請輸入受考核人的Email</div>
+                            </div>
+                            <button class="btn btn-primary btn-next-form" type="button" v-on:click="next()">下一步</button>
+                        </div>
+                        <div id="form-step-2" role="tabpanel" class="bs-stepper-pane fade dstepper-block dstepper-none" aria-labelledby="stepperFormTrigger2">
+                            <div class="form-group row mb-2">
+                                <div class="col-md-6">
+                                    <label for="inputMailForm">
+                                        <span class="text-danger font-weight-bold">*</span>員編
+                                    </label>
+                                    <input id="spv-id" type="text" class="form-control" placeholder="請輸入主管員編" v-model="spvId" required>
+                                    <div class="invalid-feedback">請輸入受考核主管的員工編號</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="inputMailForm">
+                                        <span class="text-danger font-weight-bold">*</span>姓名
+                                    </label>
+                                    <input id="spv-name" type="text" class="form-control" placeholder="請輸入主管姓名" v-model="spvName" required>
+                                    <div class="invalid-feedback">請輸入受考核主管的姓名</div>
+                                </div>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label for="inputMailForm"><span class="text-danger font-weight-bold">*</span>Email</label>
+                                <input id="spv-email" type="email" class="form-control" placeholder="請輸入Email" v-model="spvEmail" required>
+                                <div class="invalid-feedback">請輸入受考核主管的Email</div>
+                            </div>
+                            <button class="btn btn-secondary btn-next-form" style="margin-right: 0.5rem" type="button" v-on:click="previous()">上一步</button>
+                            <button class="btn btn-primary btn-next-form" type="button" v-on:click="next()">下一步</button>
+                        </div>
+                        <div id="form-step-3" role="tabpanel" class="bs-stepper-pane fade text-center dstepper-none" aria-labelledby="stepperFormTrigger3">
+                            <div class="d-flex justify-content-center">
+                                <div class="alert alert-success fade" style="width: max-content;" role="alert"><i class="bx bx-check-circle"></i>考核表建立成功</div>
+                            </div>
+                            <button class="btn btn-secondary btn-next-form" style="margin-right: 0.5rem" type="button" v-on:click="previous()">上一步</button>
+                            <button type="submit" class="btn btn-primary" v-on:click="submit()">提交</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    const app = Vue.createApp({
+        data() {
+            return {
+                currStep: 1,
+                empId: '',
+                empName: '',
+                empJobTitle: '',
+                empEmail: '',
+                period: { start: '', end: '' },
+                empDept: '',
+                spvId: '',
+                spvName: '',
+                spvEmail: '',
+            };
+        },
+        created() { },
+        methods: {
+            next() {
+                if (this.currStep === 1) {
+                    let pass = true;
+                    if (this.empId === '') {
+                        $('#emp-id').parent().addClass('was-validated');
+                        pass = false;
+                    }
+                    if (this.empName === '') {
+                        $('#emp-name').parent().addClass('was-validated');
+                        pass = false;
+                    }
+                    if (this.empJobTitle === '') {
+                        $('#emp-jobtitle').parent().addClass('was-validated');
+                        pass = false;
+                    }
+                    if (this.period.start === '' || this.period.start === '') {
+                        $('#period-start').parent().parent().addClass('was-validated');
+                        pass = false;
+                    }
+                    if (this.empDept === '') {
+                        $('#emp-dept').parent().addClass('was-validated');
+                        pass = false;
+                    }
+                    if (this.empEmail === '') {
+                        $('#emp-email').parent().addClass('was-validated');
+                        pass = false;
+                    }
+                    if (!pass) return false;
+                }
+
+                if (this.currStep === 2) {
+                    let pass = true;
+                    if (this.spvId === '') {
+                        $('#spv-id').parent().addClass('was-validated');
+                        pass = false;
+                    }
+                    if (this.spvName === '') {
+                        $('#spv-name').parent().addClass('was-validated');
+                        pass = false;
+                    }
+                    if (this.spvEmail === '') {
+                        $('#spv-email').parent().addClass('was-validated');
+                        pass = false;
+                    }
+                    if (!pass) return false;
+                }
+
+                this.currStep++;
+                showStepPanel(this.currStep);
+            },
+            previous() {
+                this.currStep--;
+                showStepPanel(this.currStep);
+            },
+            submit() {
+                let fd = new FormData();
+                fd.append('empId', this.empId);
+
+                $.ajax({
+                    url: '/API/Probation/Submit',
+                    method: 'POST',
+                    async: true,
+                    data: fd,
+                    beforeSend: toggleLoading(true),
+                    success: (res) => {
+                        console.log(res);
+                        toggleLoading(false);
+                    },
+                    error: (err) => { console.log(err); },
+                    contentType: false,
+                    processData: false,
+                    cache: false,
+                });
+            }
+        },
+    });
+    app.mount('#FormCreateSteps');
+
+    function showStepPanel(step) {
+        $('.bs-stepper-pane').removeClass('active');
+        setTimeout(() => {
+            $('.bs-stepper-pane').removeClass('dstepper-block').addClass('dstepper-none');
+            $(`.bs-stepper-pane[id="form-step-${step}"]`).removeClass('dstepper-none').addClass('dstepper-block active');
+        }, 400);
+    }
+</script>

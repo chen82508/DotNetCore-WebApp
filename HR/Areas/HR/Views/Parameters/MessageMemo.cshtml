@@ -1,0 +1,257 @@
+﻿@{
+    ViewData["Title"] = "訊息備忘錄";
+    ViewData["Area"] = ViewContext.RouteData.Values["area"]?.ToString();
+    ViewData["Controller"] = ViewContext.RouteData.Values["controller"]?.ToString();
+    ViewData["Action"] = ViewContext.RouteData.Values["action"]?.ToString();
+}
+
+<div id="MessageOverView">
+    <div class="d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold py-3 mb-4">
+            <span class="text-muted fw-light">人力資源系統 /</span>
+            @ViewData["Title"]
+        </h4>
+        @*<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#MntMsgTag" v-on:click="tagName = '';">
+            <span class="tf-icons bx bx-add-to-queue"></span>
+            新增訊息類別
+        </button>*@
+    </div>
+    <div class="row row-cols-1 row-cols-md-1 g-4 mb-5">
+        <div v-for="cond in conditions" class="col">
+            <div class="accordion-item card">
+                <h2 class="accordion-header text-body d-flex justify-content-between">
+                    <button type="button" class="accordion-button bg-label-info"
+                        data-bs-toggle="collapse" :data-bs-target="`#accordionIcon-${cond.id}`" :aria-controls="`accordionIcon-${cond.id}`">
+                        {{cond.title}}
+                    </button>
+                </h2>
+                <div :id="`accordionIcon-${cond.id}`" class="accordion-collapse collapse show">
+                    <div class="accordion-body">
+                        <div class="d-flex justify-content-end align-items-center">
+                            <button type="button" class="btn btn-icon btn-primary" style="margin-top: 0.9375rem;" title="新增訊息"
+                                data-bs-target="#MntMessage" data-bs-toggle="modal" v-on:click="showModal('add', cond.id, 0, '', '')">
+                                <span class="tf-icons bx bx-add-to-queue"></span>
+                            </button>
+                        </div>
+                        <div v-if="getMessages(cond.id).length > 0" class="table-responsive text-nowrap">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>主旨</th>
+                                        <th>內容</th>
+                                        <th>功能</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="msg in getMessages(cond.id)">
+                                        <td>{{msg.subject}}</td>
+                                        <td>{{getContentSubstring(msg.content)}}</td>
+                                        <td>
+                                            <button type="button" class="btn btn-icon btn-outline-info" style="margin-right: 0.3875rem;"
+                                                    v-on:click="showModal('mnt', msg.cid, msg.id, msg.subject, msg.content)"
+                                                    data-bs-target="#MntMessage" data-bs-toggle="modal" title="編輯">
+                                                <span class="tf-icons bx bx-edit"
+                                                      data-bs-toggle="tooltip"
+                                                      data-bs-offset="0,12"
+                                                      data-bs-placement="top"
+                                                      data-bs-html="true"
+                                                      data-bs-dismiss="tooltip"
+                                                      data-bs-original-title="<span>編輯</span>"></span>
+                                            </button>
+                                            <button type="button" class="btn btn-icon btn-dark" style="margin-right: 0.3875rem;"
+                                                    v-on:click="copyContent(msg.id)" title="複製內容">
+                                                <span class="tf-icons bx bx-copy"
+                                                      data-bs-toggle="tooltip"
+                                                      data-bs-offset="0,12"
+                                                      data-bs-placement="top"
+                                                      data-bs-html="true"
+                                                      data-bs-dismiss="tooltip"
+                                                      data-bs-original-title="<span>複製內容</span>"></span>
+                                            </button>
+                                            <button type="button" class="btn btn-icon btn-danger" v-on:click="deleteData(msg.id)" title="刪除">
+                                                <span class="tf-icons bx bx-message-square-minus"
+                                                      data-bs-toggle="tooltip"
+                                                      data-bs-offset="0,12"
+                                                      data-bs-placement="top"
+                                                      data-bs-html="true"
+                                                      data-bs-dismiss="tooltip"
+                                                      data-bs-original-title="<span>刪除</span>"></span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div v-else class="d-flex justify-content-center align-items-center">
+                            <span class="badge bg-label-danger">尚無資料</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="MntMsgTag" class="modal fade" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">新增訊息類別</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col mb-3">
+                            <label for="tag-name" class="form-label"><span style="color: red">*</span>類別名稱</label>
+                            <input type="text" id="tag-name" class="form-control" v-model.trim="tagName" placeholder="請輸入類別名稱" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">關閉</button>
+                    <button type="button" class="btn btn-success" v-on:click="addMsgTag">新增</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="MntMessage" class="modal fade" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{opt === 'add' ? '新增' : '編輯'}}訊息</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col mb-3">
+                            <label for="msg-subject" class="form-label"><span style="color: red">*</span>主旨</label>
+                            <input type="text" id="msg-subject" class="form-control"
+                                v-model.trim="mntMsg.subject" placeholder="請輸入主旨" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col mb-3">
+                            <label for="msg-content" class="form-label"><span style="color: red">*</span>內容</label>
+                            <textarea type="text" id="msg-content" class="form-control" rows="5" v-model.trim="mntMsg.content" placeholder="請輸入內容"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">關閉</button>
+                    <button v-if="opt === 'add'" type="button" class="btn btn-success" v-on:click="addMessage()">新增</button>
+                    <button v-else type="button" class="btn btn-success" v-on:click="saveChange()">儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="copy-alert-toast" class="bs-toast toast toast-placement-ex m-2 fade bg-info top-0 start-50 translate-middle-x hide"
+    role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+        <i class="bx bx-bell me-2"></i>
+        <div class="me-auto fw-semibold">提醒</div>
+    </div>
+    <div class="toast-body">
+        已成功複製內文
+    </div>
+</div>
+
+<script type="text/javascript">
+    let overview = Vue.createApp({
+        data() {
+            return {
+                opt: '',
+                conditions: [], messages: [], tagName: '',
+                mntMsg: { cid: 0, id: 0, subject: '', content: '' },
+            };
+        },
+        created() {
+            this.initialData();
+        },
+        methods: {
+            initialData() {
+                postMethod('/API/Params/MessageTags', toggleLoading(true), (res) => { this.conditions = res; }, true);
+                postMethod('/API/Params/Messages', null, (res) => { this.messages = res; toggleLoading(false); }, true);
+            },
+            getMessages(cid) { return this.messages.filter(msg => msg.cid === cid); },
+            getContentSubstring(content) {
+                if (content.length > 50) return `${content.substring(0, 51)}...`;
+                return content;
+            },
+            showModal(opt, cid, id, subject, content) {
+                this.opt = opt;
+                this.mntMsg.cid = cid;
+                this.mntMsg.id = id;
+                this.mntMsg.subject = subject;
+                this.mntMsg.content = content;
+            },
+            hasCompleteInfo() { return this.mntMsg.subject !== '' && this.mntMsg.content !== ''; },
+            addMsgTag() {
+                postMethod('/API/Params/Add/MessageTag', null, (res) => { this.messages.push(res); }, false, { title: this.tagName });
+                alert('新增成功');
+                postMethod('/API/Params/MessageTags', toggleLoading(true), (res) => { this.conditions = res; toggleLoading(false); }, true);
+                $('#MntMsgTag').modal('hide');
+            },
+            addMessage() {
+                if (!this.hasCompleteInfo()) {
+                    alert('主旨與內容為必填欄位');
+                    return false;
+                }
+
+                postMethod('/API/Params/Add/Message', null, (res) => { console.log(`Add message data: ${JSON.stringify(res)}`); }, false, {
+                    cid: this.mntMsg.cid,
+                    id: this.mntMsg.id,
+                    subject: this.mntMsg.subject,
+                    content: this.mntMsg.content,
+                });
+
+                postMethod('/API/Params/Messages', null, (res) => { this.messages = res; }, true);
+
+                this.mntMsg.subject = '';
+                this.mntMsg.content = '';
+            },
+            saveChange() {
+                if (!this.hasCompleteInfo()) {
+                    alert('主旨與內容為必填欄位');
+                    return false;
+                }
+
+                if (confirm("確定儲存此筆資料?")) {
+                    patchMethod('/API/Params/Update/Message', {
+                        cid: this.mntMsg.cid,
+                        id: this.mntMsg.id,
+                        subject: this.mntMsg.subject,
+                        content: this.mntMsg.content,
+                    }, (res) => {
+                        let newMsg = this.messages.find(m => m.id === res.id);
+                        newMsg.subject = res.subject;
+                        newMsg.content = res.content;
+                        alert('更新成功');
+                    });
+                }
+            },
+            deleteData(id) {
+                if (confirm("確定要刪除此筆資料?")) {
+                    deleteMethod(`/API/Params/Delete/Message/${id}`, null, (res) => {
+                        console.log(`Delete messages data: ${JSON.stringify(res)}`);
+                        setTimeout(() => {
+                            this.messages = this.messages.filter(s => s.id !== id);
+                        }, 150);
+                    });
+                }
+            },
+            copyContent(id) {
+                const copyContent = this.messages.find(msg => msg.id === id).content;
+                let tmpTxtArea = document.createElement('textarea');
+                $(tmpTxtArea).css({ 'position': 'absolute', 'left': '-9999px' }).attr('readonly', 'readonly').val(copyContent);
+                document.body.appendChild(tmpTxtArea);
+                tmpTxtArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tmpTxtArea);
+                $('#copy-alert-toast').toast({ delay: 2000 });
+                $('#copy-alert-toast').toast('show');
+            },
+        },
+    });
+
+    overview.mount('#MessageOverView');
+</script>

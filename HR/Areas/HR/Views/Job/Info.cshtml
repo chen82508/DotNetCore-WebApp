@@ -1,0 +1,564 @@
+﻿@{
+    ViewData["Title"] = "職缺資訊";
+    ViewData["Area"] = ViewContext.RouteData.Values["area"]?.ToString();
+    ViewData["Controller"] = ViewContext.RouteData.Values["controller"]?.ToString();
+    ViewData["Action"] = ViewContext.RouteData.Values["action"]?.ToString();
+}
+
+<div id="JobInfoOverView">
+    <div class="d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold py-3 mb-4">
+            <span class="text-muted fw-light">人力資源系統 /</span>
+            @ViewData["Title"]
+        </h4>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#MntJob" v-on:click="openDialog(0)">
+            <span class="tf-icons bx bx-add-to-queue"></span>
+            新增職缺
+        </button>
+    </div>
+
+    <div class="nav-align-top mb-4">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <button type="button" class="nav-link" v-bind:class="{active: tabs === 1}" role="tab" aria-selected="true" v-on:click="switchTabs(1)">
+                    開放中
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" v-bind:class="{active: tabs === 0}" role="tab" aria-selected="true" v-on:click="switchTabs(0)">
+                    關閉
+                </button>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="table-responsive text-nowrap">
+                <table v-if="infos.length > 0" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th v-for="c in columns">{{c}}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-border-bottom-0">
+                        <tr v-for="i in infos">
+                            <td>{{i.name}}</td>
+                            @*<td>
+                            <span class="badge me-1" v-bind:class="`bg-label-${i.isOpen ? 'success' : 'danger'}`">{{i.isOpen ? '開放中' : '關閉'}}</span>
+                            </td>*@
+                            <td>
+                                <div class="d-inline-flex">
+                                    <div class="form-check form-switch" style="margin: 0.4rem;">
+                                        <input type="checkbox" :id="`jobOpened-${i.id}`" class="form-check-input"
+                                               v-model="i.isOpen" v-on:change="changeOpen($event, i.id)">
+                                        <label :for="`jobOpened-${i.id}`" class="form-check-label">{{i.isOpen ? '開' : '關'}}</label>
+                                    </div>
+                                </div>
+                            </td>
+                            <td v-if="i.itvStart === ''"><span class="badge bg-label-warning">尚無開放歷程</span></td>
+                            <td v-else>{{i.itvStart}} ~ {{i.isOpen ? '現在' : i.itvEnd}}</td>
+                            <td>{{ !i.daysIndicator ? '' : i.daysIndicator }}</td>
+                            <td>{{ calcOpenDays(i.id) ? `${calcOpenDays(i.id)}天` : '' }}</td>
+                            <td>
+                                <span v-if="indicatorSign(i.id) !== ''" :class="`badge badge-center rounded-pill bg-${indicatorSign(i.id)}`">S</span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-icon btn-outline-info" style="margin-right: 0.3875rem;" title="編輯"
+                                        data-bs-target="#MntJob" data-bs-toggle="modal" v-on:click="openDialog(i.id)">
+                                    <span class="tf-icons bx bx-edit"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-offset="0,12"
+                                          data-bs-placement="top"
+                                          data-bs-html="true"
+                                          data-bs-dismiss="tooltip"
+                                          data-bs-original-title="<span>編輯</span>"></span>
+                                </button>
+                                <button type="button" class="btn btn-icon btn-danger" v-on:click="deleteJob(i.id)" title="刪除">
+                                    <span class="tf-icons bx bx-message-square-minus"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-offset="0,12"
+                                          data-bs-placement="top"
+                                          data-bs-html="true"
+                                          data-bs-dismiss="tooltip"
+                                          data-bs-original-title="<span>刪除</span>"></span>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div v-else class="d-flex justify-content-center align-items-center">
+                    <span class="badge bg-label-danger">查無資料</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div v-if="paginate.total > 1" class="card">
+        <div class="row">
+            <div class="demo-inline-spacing">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        <!-- 第一頁 -->
+                        <li v-if="paginate.total > 5 && paginate.prev !== 0" class="page-item first">
+                            <a class="page-link" href="javascript:void(0);" v-on:click="switchPage(1)"><i class="tf-icon bx bx-chevrons-left"></i></a>
+                        </li>
+                        <!-- 上一頁 -->
+                        <li v-if="paginate.prev !== 0" class="page-item prev">
+                            <a v-if="paginate.prev < 1" class="page-link" href="javascript:void(0);"><i class="tf-icon bx bx-chevron-left"></i></a>
+                            <a v-else class="page-link" href="javascript:void(0);" v-on:click="switchPage(paginate.prev)"><i class="tf-icon bx bx-chevron-left"></i></a>
+                        </li>
+                        <!-- 省略符號 -->
+                        <li v-if="paginate.total > 5 && paginate.current - 1 > 2" class="page-item">
+                            <div class="justify-content-center align-items-center" style="padding: 0.3875rem; margin-left: 0.1875rem;">
+                                <i class="tf-icons bx bx-dots-horizontal-rounded"></i>
+                            </div>
+                        </li>
+                        <!-- 頁碼 -->
+                        <li v-for="p in midPageIndexes" class="page-item" v-bind:class="{active: paginate.current === p}">
+                            <a class="page-link" href="javascript:void(0);" v-on:click="switchPage(p)">{{p}}</a>
+                        </li>
+                        <!-- 省略符號 -->
+                        <li v-if="paginate.total > 5 && paginate.total - paginate.current > 2" class="page-item">
+                            <div class="justify-content-center align-items-center" style="padding: 0.3875rem; margin-left: 0.1875rem;">
+                                <i class="tf-icons bx bx-dots-horizontal-rounded"></i>
+                            </div>
+                        </li>
+                        <!-- 下一頁 -->
+                        <li v-if="paginate.next <= paginate.total" class="page-item next">
+                            <a v-if="paginate.next > paginate.total" class="page-link" href="javascript:void(0);"><i class="tf-icon bx bx-chevron-right"></i></a>
+                            <a v-else class="page-link" href="javascript:void(0);" v-on:click="switchPage(paginate.next)"><i class="tf-icon bx bx-chevron-right"></i></a>
+                        </li>
+                        <!-- 最後一頁 -->
+                        <li v-if="paginate.total > 5 && paginate.current != paginate.total" class="page-item last">
+                            <a class="page-link" href="javascript:void(0);" v-on:click="switchPage(paginate.total)"><i class="tf-icon bx bx-chevrons-right"></i></a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <div id="CloseInfo" class="modal fade" aria-hidden="false" tabindex="-1">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">關閉內容編輯</h5>
+                    <button type="button" class="btn-close" data-bs-toggle="modal" aria-label="Close" v-on:click="refuseClose()"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <label for="close-date" class="col-sm-2 col-form-label">關閉日期</label>
+                        <div class="col-sm-5">
+                            <input type="date" id="close-date" class="form-control" v-model="closeInfo.date" />
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="close-reason" class="col-sm-2 col-form-label">關閉原因</label>
+                        <div class="col-sm-10">
+                            <input type="text" id="close-reason" class="form-control" v-model="closeInfo.reason" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" v-on:click="refuseClose()">關閉</button>
+                    <button type="button" class="btn btn-success" data-bs-dismiss="modal" v-on:click="closeConfirm()">確定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="MntJob" class="modal fade" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{job.id === 0 ? '新增' : '編輯'}}職缺</h5>
+                    <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-xxl">
+                            <div class="row mb-3">
+                                <label for="job-name" class="col-sm-2 col-form-label">職缺名稱</label>
+                                <div class="col-sm-10">
+                                    <input type="text" id="job-name" class="form-control" v-model="job.name" />
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="" class="col-sm-2 col-form-label">職務類別</label>
+                                <div class="col-sm-10">
+                                    <button type="button" class="btn btn-sm btn-info"
+                                        v-on:click="openCatDialog()"
+                                        data-bs-target="#ChkCategory"
+                                        data-bs-toggle="modal"
+                                        data-bs-dismiss="modal">
+                                        選擇
+                                    </button>
+                                    <div v-if="relCat.length > 0" class="demo-inline-spacing mt-3">
+                                        <ol class="list-group list-group-numbered">
+                                            <li v-for="rel in relList" class="list-group-item">{{rel.name}}</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="belong-company" class="col-sm-2 col-form-label">所屬公司</label>
+                                <div class="col-sm-10">
+                                    <select id="belong-company" class="form-select" v-model="job.company">
+                                        <option value="0">-- 請選擇 --</option>
+                                        <option v-for="com in companies" :value="com.id">{{com.name}}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="job-daysIndicator" class="col-sm-2 col-form-label">目標招聘天數</label>
+                                <div class="col-sm-10">
+                                    <input type="number" id="job-daysIndicator" class="form-control" placeholder="請輸入天數指標數字" v-model="job.daysIndicator" />
+                                </div>
+                            </div>
+                            <div v-if="job.id === 0" class="row mb-3">
+                                <label for="" class="col-sm-2 col-form-label">開放狀態</label>
+                                <div class="col-sm-10">
+                                    <div class="row">
+                                        <div class="d-inline-flex">
+                                            <div class="form-check form-switch" style="margin: 0.4rem;">
+                                                @*<input type="checkbox" id="job-isOpen" class="form-check-input" v-model="job.isOpen" v-on:change="changeOpen($event)">*@
+                                                <input type="checkbox" id="job-isOpen" class="form-check-input" v-model="job.isOpen">
+                                                <label for="job-isOpen" class="form-check-label">{{job.isOpen ? '開' : '關'}}</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @*<div v-if="job.id !== 0 && !jobClose" class="row">
+                                        <div class="d-flex mt-1">
+                                            <label for="close-date" class="col-sm-2 col-form-label">關閉日期：</label>
+                                            <div class="col-sm-4">
+                                                <input type="date" id="close-date" class="form-control" />
+                                            </div>
+                                        </div>
+                                        <div class="d-flex mt-1">
+                                            <label for="close-reason" class="col-sm-2 col-form-label">關閉原因：</label>
+                                            <input type="text" id="close-reason" class="form-control" />
+                                        </div>
+                                    </div>*@
+                                </div>
+                            </div>
+                            <div v-if="job.id !== 0 && job.history.length > 0" class="row mb-3">
+                                <label class="col-sm-2 col-form-label">開放歷程</label>
+                                <div class="col-sm-10">
+                                    <div>
+                                        <ul v-if="job.history.length > 0" class="list-group list-group-flush border">
+                                            <li v-for="his in job.history" class="list-group-item">{{his}}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">關閉</button>
+                    <button v-if="job.id === 0" type="button" class="btn btn-success" data-bs-dismiss="modal" v-on:click="addVacancy()">儲存</button>
+                    <button v-else type="button" class="btn btn-success" data-bs-dismiss="modal" v-on:click="saveChange(job.id)">儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="ChkCategory" class="modal fade" aria-hidden="true" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable" role="document">
+            <div v-if="isShowCat" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">職缺所屬分類</h5>
+                    <span class="badge bg-label-danger">※最多勾選三項</span>
+                    <button type="button" class="btn-close" v-on:click="isShowCat = !isShowCat"
+                            data-bs-target="#MntJob" data-bs-toggle="modal" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="accordion mt-3">
+                        <div v-for="m in validMains" class="card accordion-item">
+                            <h2 class="accordion-header" :id="`head-${m.id}`">
+                                <button type="button" class="accordion-button bg-label-info" v-bind:class="{collapsed: !hasChkedSubs(m.id)}"
+                                        data-bs-toggle="collapse" :data-bs-target="`#accordion_${m.id}`"
+                                        aria-expanded="false" :aria-controls="`accordion_${m.id}`">
+                                    {{m.name}}
+                                </button>
+                            </h2>
+                            <div :id="`accordion_${m.id}`" class="accordion-collapse collapse" v-bind:class="{show: hasChkedSubs(m.id)}">
+                                <div class="list-group list-group-flush">
+                                    <label v-for="s in getSubs(m.id)" class="list-group-item">
+                                        <input type="checkbox" class="form-check-input me-1"
+                                            :id="`jobCat_${m.id}`" :value="s.id"
+                                            v-bind:disabled="!isChecked(s.id) && chkedCaties.length >= 3"
+                                            v-bind:checked="isChecked(s.id)"
+                                            v-model="tempCat" /> {{s.name}}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" v-on:click="isShowCat = !isShowCat"
+                        data-bs-target="#MntJob" data-bs-toggle="modal" data-bs-dismiss="modal">
+                        關閉
+                    </button>
+                    <button class="btn btn-success" v-on:click="setRelations()"
+                        data-bs-target="#MntJob" data-bs-toggle="modal" data-bs-dismiss="modal">
+                        確定
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    let overview = Vue.createApp({
+        data() {
+            return {
+                tabs: 1,
+                paginate: { total: 0, current: 1, prev: 0, next: 2, size: 20 },
+                columns: ['職缺名稱', '開放狀態', '最近開放期間', '目標招聘天數', '開放總天數', '招聘燈號', '維護'],
+                infos: [], isShowCat: false, relCat: [], tempCat: [],
+                cat: { main: [], subs: [] }, companies:[],
+                job: { id: 0, name: '', isOpen: false, company: 0, daysIndicator: 0, history: [], },
+                closeInfo: { id: 0, date: '', reason: '', },
+            };
+        },
+        created() { this.initialData(); },
+        computed: {
+            midPageIndexes() {
+                const cp = this.paginate.current;
+                const pc = this.paginate.total;
+                const si = cp - 2 <= 0 ? 1 : (cp - 2) > (pc - 5) ? pc - 5 + 1 : cp - 2;
+                const ei = cp + 2 > pc ? pc : (cp + 2) <= (pc - 5) ? pc - 5 + 1 : cp + 2;
+                const arrLen = ei - si + 1;
+
+                if (pc > 5) { return Array.from({ length: (arrLen < 5 ? 5 : arrLen) }, (_, i) => i + si); }
+                else { return Array.from({ length: pc }, (_, i) => i + si); }
+            },
+            chkedCaties() { return this.cat.subs.filter(s => this.tempCat.includes(s.id)); },
+            relList() { return this.cat.subs.filter(s => this.relCat.includes(s.id)); },
+            validMains() { return this.cat.main.filter(x => this.cat.subs.filter(y => y.tid === x.id).length > 0) },
+        },
+        methods: {
+            initialData() {
+                postMethod('/API/Job/JobInfos/Total', null, (res) => {
+                    this.paginate.total = parseInt(res / this.paginate.size) + 1 * (res % this.paginate.size > 0);
+                }, true, { isOpen: this.tabs, });
+                postMethod('/API/Job/JobInfos', toggleLoading(true), (res) => { this.infos = res; }, true, { isOpen: this.tabs, });
+                postMethod('/API/Job/TypeTags', null, (res) => { this.cat.main = res; }, true);
+                postMethod('/API/Job/Types', null, (res) => { this.cat.subs = res; }, true);
+                getMethod('/API/Params/Get/Options/3', null, (res) => { this.companies = res; toggleLoading(false); }, true);
+            },
+            getSubs(tid) {
+                return this.cat.subs.filter(x => x.tid === tid);
+            },
+            calcOpenDays(id) {
+                const oneDay = 24 * 60 * 60 * 1000;
+                const data = this.infos.find(i => i.id === id);
+                if (data.itvStart) {
+                    const dtStart = new Date(data.itvStart);
+                    let dtEnd = new Date();
+                    if (!data.isOpen) {
+                        dtEnd = new Date(data.itvEnd);
+                    }
+
+                    return Math.round(Math.abs((dtEnd - dtStart) / oneDay));
+                }
+                return '';
+            },
+            hasChkedSubs(tid) { 
+                return this.cat.subs.filter(x => x.tid === tid && this.relCat.includes(x.id)).length > 0;
+            },
+            isChecked(id) { return this.tempCat.includes(id); },
+            setRelations() { this.relCat = this.tempCat; },
+            openDialog(id) {
+                this.isShowCat = false;
+                this.job.id = id;
+                if (id === 0) {
+                    this.job.name = '';
+                    this.job.isOpen = false;
+                    this.job.company = 0;
+                    this.job.daysIndicator = 0;
+                    this.job.history = [];
+                    this.relCat = [];
+
+                    this.jobClose = false;
+                } else {
+                    getMethod(`/API/Job/JobInfos/${id}`, null, (res) => {
+                        this.job.name = res.name;
+                        this.job.isOpen = res.isOpen;
+                        this.job.company = res.company;
+                        this.job.daysIndicator = res.daysIndicator;
+                        this.job.history = res.history;
+
+                        this.jobClose = res.isOpen;
+                    }, false);
+                    getMethod(`/API/Job/Relations/${id}`, null, (res) => { this.relCat = res; }, false);
+                }
+            },
+            indicatorSign(id) {
+                const info = this.infos.find(i => i.id === id);
+                if (info.isOpen) {
+                    const today = new Date();
+                    const d = new Date(info.itvStart);
+                    const diff = Math.floor((today - d) / 86400000);
+
+                    const indicator = info.daysIndicator;
+                    if (indicator !== 0) {
+                        const progress = diff / indicator;
+                        console.log(progress);
+                        if (progress <= (1 / 3)) {
+                            return 'success';
+                        } else if (progress > (1 / 3) && progress <= (2 / 3)) {
+                            return 'warning';
+                        } else {
+                            return 'danger';
+                        }
+                    }
+                }
+                return '';
+            },
+            openCatDialog() {
+                this.isShowCat = true;
+                this.tempCat = this.relCat;
+            },
+            changeOpen(e, id) {
+                const status = $(e.target).prop('checked');
+                if (!status) {
+                    this.closeInfo.id = id;
+                    $('#CloseInfo').modal('show');
+                } else {
+                    let target = this.infos.find(i => i.id === id);
+                    if (confirm("確定要開放此職缺嗎？")) {
+                        toggleLoading(true);
+                        patchMethod(`/API/Job/Update/OpenHistory/${id}/${status}`, {}, (res) => { target.history = res; });
+                        const dataCnt = this.infos.filter(i => i.id === id).length;
+                        this.paginate.current = dataCnt > 0 ? this.paginate.current : this.paginate.prev > 0 ? this.paginate.prev : 1;
+                        let formData = {
+                            isOpen: this.tabs,
+                            pagination: { current: this.paginate.current, size: this.paginate.size, },
+                        };
+                        postMethod('/API/Job/JobInfos/Total', null, (res) => {
+                            this.paginate.total = parseInt(res / this.paginate.size) + 1 * (res % this.paginate.size > 0);
+                        }, true, { isOpen: this.tabs, });
+                        postMethod('/API/Job/JobInfos', null, (res) => {
+                            this.infos = res;
+                            toggleLoading(false);
+                        }, true, formData);
+                    } else {
+                        target.isOpen = !target.isOpen;
+                    }
+                }
+            },
+            closeConfirm() {
+                console.log(this.closeInfo);
+                patchMethod('/API/Job/Update/CloseJob', {
+                    id: this.closeInfo.id,
+                    closeDate: this.closeInfo.date,
+                    closeReason: this.closeInfo.reason,
+                }, (res) => {
+                    const dataCnt = this.infos.filter(i => i.id === this.closeInfo.id).length;
+                    this.paginate.current = dataCnt > 0 ? this.paginate.current : this.paginate.prev > 0 ? this.paginate.prev : 1;
+                    let formData = {
+                        isOpen: this.tabs,
+                        pagination: { current: this.paginate.current, size: this.paginate.size, },
+                    };
+                    postMethod('/API/Job/JobInfos/Total', toggleLoading(true), (res) => {
+                        this.paginate.total = parseInt(res / this.paginate.size) + 1 * (res % this.paginate.size > 0);
+                    }, true, { isOpen: this.tabs, });
+                    postMethod('/API/Job/JobInfos', null, (res) => {
+                        this.infos = res;
+                        toggleLoading(false);
+                    }, true, formData);
+                });
+            },
+            refuseClose() {
+                let target = this.infos.find(i => i.id === this.closeInfo.id);
+                target.isOpen = !target.isOpen;
+            },
+            addVacancy() {
+                postMethod('/API/Job/Add/JobInfo', null, (res) => {
+                    const viewStatus = Boolean(this.tabs);
+                    if (viewStatus === res.isOpen) {
+                        this.infos.push(res);
+                    }
+                }, false, {
+                    name: this.job.name,
+                    isOpen: this.job.isOpen,
+                    categories: this.relCat,
+                    daysIndicator: this.job.daysIndicator,
+                    company: this.job.company,
+                });
+            },
+            saveChange(id) {
+                patchMethod('/API/Job/Update/JobInfo', {
+                    id: id,
+                    name: this.job.name,
+                    isOpen: this.job.isOpen,
+                    categories: this.relCat,
+                    daysIndicator: this.job.daysIndicator,
+                    company: this.job.company,
+                    history: this.job.history,
+                }, (res) => {
+                    let newInfo = this.infos.find(i => i.id == res.id);
+                    newInfo.name = res.name;
+                    newInfo.isOpen = res.isOpen;
+                    newInfo.daysIndicator = res.daysIndicator;
+                    newInfo.itvStart = res.itvStart;
+                    newInfo.itvEnd = res.itvEnd;
+
+                    alert('更新成功');
+                });
+            },
+            deleteJob(id) {
+                if (confirm('確定要刪除此職缺資料?')) {
+                    deleteMethod(`/API/Job/Delete/JobInfo/${id}`, {}, (res) => {
+                        console.log(`Delete job data: ${JSON.stringify(res)}`);
+                        //this.infos = this.infos.filter(i => i.id !== res.id);
+                        const dataCnt = this.infos.filter(i => i.id === this.closeInfo.id).length;
+                        this.paginate.current = dataCnt > 0 ? this.paginate.current : this.paginate.prev > 0 ? this.paginate.prev : 1;
+                        let formData = {
+                            isOpen: this.tabs,
+                            pagination: { current: this.paginate.current, size: this.paginate.size, },
+                        };
+                        postMethod('/API/Job/JobInfos/Total', toggleLoading(true), (res) => {
+                            this.paginate.total = parseInt(res / this.paginate.size) + 1 * (res % this.paginate.size > 0);
+                        }, true, { isOpen: this.tabs, });
+                        postMethod('/API/Job/JobInfos', null, (res) => {
+                            this.infos = res;
+                            toggleLoading(false);
+                        }, true, formData);
+                    });
+                }
+            },
+            switchTabs(val) {
+                this.tabs = val;
+                this.paginate.current = 1;
+                this.paginate.prev = 0;
+                this.paginate.next = 2;
+                const formData = {
+                    isOpen: val,
+                    pagination: { current: 1, size: 20, },
+                };
+                postMethod('/API/Job/JobInfos/Total', toggleLoading(true), (res) => {
+                    this.paginate.total = parseInt(res / this.paginate.size) + 1 * (res % this.paginate.size > 0);
+                }, true, { isOpen: this.tabs, });
+                postMethod('/API/Job/JobInfos', null, (res) => {
+                    this.infos = res;
+                    toggleLoading(false);
+                }, true, formData);
+            },
+            switchPage(p) {
+                this.paginate.current = p;
+                this.paginate.prev = p - 1;
+                this.paginate.next = p + 1;
+                const formData = {
+                    isOpen: this.tabs,
+                    pagination: { current: p, size: 20, },
+                };
+                postMethod('/API/Job/JobInfos', toggleLoading(true), (res) => {
+                    this.infos = res;
+                    toggleLoading(false);
+                }, true, formData);
+            },
+        }
+    }).mount('#JobInfoOverView');
+</script>

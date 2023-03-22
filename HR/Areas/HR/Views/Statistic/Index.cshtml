@@ -1,0 +1,216 @@
+﻿@{
+    ViewData["Title"] = "儀錶板";
+    ViewData["Area"] = ViewContext.RouteData.Values["area"]?.ToString();
+    ViewData["Controller"] = ViewContext.RouteData.Values["controller"]?.ToString();
+    ViewData["Action"] = ViewContext.RouteData.Values["action"]?.ToString();
+
+    Layout = "../../../../Views/Shared/Layout/_Layout";
+}
+
+<div id="VacanciesOverView">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <h5 class="mb-0">{{showState ? '開放中' : '關閉中'}}各職缺概況</h5>
+                    <div class="form-check form-switch">
+                        <input type="checkbox" id="job-isOpen" class="form-check-input" v-model="showState">
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div v-if="vacancies.length === 0" class="d-flex justify-content-center align-items-center">
+                        <span class="badge bg-label-danger">尚未有可供統計的職務資料</span>
+                    </div>
+                    <div v-else class="table-responsive text-nowrap">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th v-for="item in columns">{{item}}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="item in overviewData">
+                                    <td>{{item.name}}</td>
+                                    <td>{{item.itvw}}</td>
+                                    <td>{{item.adm}}</td>
+                                    <td>{{item.chkIn}}</td>
+                                    <td>{{percentage(item.adm, item.itvw)}}%</td>
+                                    <td>{{percentage(item.chkIn, item.adm)}}%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div id="OverViewChart" class="col-md-6 col-lg-4 col-xl-4 order-0 mb-4">
+        <div v-if="showChart">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center justify-content-between pb-0">
+                    <div class="card-title mb-0">
+                        <h5 class="m-0 me-2">{{showState ? '開放中' : '關閉中'}}各職缺總面試人數分配</h5>
+                        <small class="text-muted">共{{totalInterview}}人參與面試</small>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input type="checkbox" id="job-isOpen" class="form-check-input" v-model="showState">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex flex-column align-items-center gap-1"></div>
+                        <div id="chart" style="min-height: 137.55px;"></div>
+                        <div class="resize-triggers">
+                            <div class="expand-trigger">
+                                <div style="width: 300px; height: 139px;"></div>
+                            </div>
+                            <div class="contract-trigger"></div>
+                        </div>
+                    </div>
+                    <ul class="p-0 m-0">
+                        <li v-for="s in overviewData" class="d-flex mb-4 pb-1">
+                            <div class="avatar flex-shrink-0 me-3">
+                                <span class="avatar-initial rounded bg-label-primary"><i class="bx bx-briefcase"></i></span>
+                            </div>
+                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="me-2">
+                                    <h6 class="mb-0">{{s.name}}</h6>
+                                </div>
+                                <div class="user-progress">
+                                    <small class="fw-semibold">{{s.itvw}}</small>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="VacancyStatistic" class="col-md-6 col-lg-4 col-xl-4 order-0 mb-4">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between pb-0">
+                <div class="card-title mb-4">
+                    <h5 class="m-0 me-2">開放中各職缺現況統計</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <ul class="p-0 m-0">
+                    <li v-for="s in status" class="d-flex mb-4 pb-1">
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2">
+                                <h6 class="mb-0">{{s.name}}</h6>
+                            </div>
+                            <div class="user-progress">
+                                <small class="fw-semibold">{{countStatus(s.val)}}</small>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/hrHumanStatus.js"></script>
+<script type="text/javascript">
+    const overview = Vue.createApp({
+        data() {
+            return {
+                showState: true,
+                columns: ['職缺', '總面試人數', '總錄取人數', '總報到人數', '錄取率', '報到率'],
+                vacancies: [], notAdmiRsn: [], notChkInRsn: [],
+            };
+        },
+        created() { this.initialData(); },
+        computed: {
+            overviewData() { return this.vacancies.filter(vac => vac.isOpened === this.showState); }
+        },
+        methods: {
+            initialData() {
+                getMethod('/api/Statistic/OverView', toggleLoading(true), (res) => { this.vacancies = res; toggleLoading(false); }, true);
+            },
+            percentage: function (num, den) {
+                if (den === 0 || num === 0) {
+                    return 0;
+                }
+                return (num * 100 / den).toFixed(2);
+            },
+        },
+    }).mount('#VacanciesOverView');
+
+    const overviewChart = Vue.createApp({
+        data() {
+            return {
+                showState: true,
+                vacancies: [], notAdmiRsn: [], notChkInRsn: [],
+                chartOptions: {},
+            };
+        },
+        created() { this.initialData(); },
+        computed: {
+            totalInterview() { return this.vacancies.filter(vac => vac.isOpened === this.showState).map(item => Object.values(item)[2]).reduce((a, b) => a + b, 0); },
+            showChart() { return this.vacancies.filter(vac => vac.isOpened === this.showState).length > 0; },
+            overviewData() { return this.vacancies.filter(vac => vac.isOpened === this.showState); }
+        },
+        methods: {
+            initialData() {
+                getMethod('/api/Statistic/OverView', toggleLoading(true), (res) => {
+                    this.vacancies = res;
+                    toggleLoading(false);
+                    this.chartOptions = {
+                        chart: { type: 'donut' },
+                        labels: this.overviewData.map(item => Object.values(item)[1]),
+                        series: this.overviewData.map(item => Object.values(item)[2]),
+                        stroke: { width: 5 },
+                        dataLabels: {
+                            enabled: true,
+                            formatter: function (val) { return val.toFixed(2) + "%" },
+                            dropShadow: {}
+                        },
+                        legend: { show: false },
+                        grid: {
+                            padding: { top: 0, bottom: 0, right: 15 },
+                        },
+                        plotOptions: {
+                            pie: {
+                                donut: { size: '67%', }
+                            }
+                        }
+                    };
+                }, true);
+            },
+            genChart() {
+                var chart = new ApexCharts(document.querySelector("#chart"), this.chartOptions);
+                chart.render();
+
+                const chartSeries = this.overviewData.map(item => Object.values(item)[2]);
+                chart.updateSeries(chartSeries);
+            },
+        },
+        updated() { this.genChart(); },
+    }).mount('#OverViewChart');
+
+    const vacancyStatistic = Vue.createApp({
+        data() {
+            return {
+                status: HunamResourceStatus.filter(hrs => hrs.active).sort((a, b) => a.seq - b.seq),
+                statistic: [],
+            };
+        },
+        created() { this.initialData(); },
+        methods: {
+            initialData() {
+                getMethod('/api/Statistic/Vacancy', null, (res) => {
+                    console.log(res);
+                    this.statistic = res;
+                }, true);
+            },
+            countStatus(stsId) {
+                return this.statistic.filter(s => s.status === stsId).length;
+            },
+        },
+    }).mount('#VacancyStatistic');
+</script>

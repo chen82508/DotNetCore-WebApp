@@ -1,0 +1,756 @@
+﻿@{
+    ViewData["Title"] = "人才資料";
+    ViewData["Area"] = ViewContext.RouteData.Values["area"]?.ToString();
+    ViewData["Controller"] = ViewContext.RouteData.Values["controller"]?.ToString();
+    ViewData["Action"] = ViewContext.RouteData.Values["action"]?.ToString();
+
+    string UserName = $"{TempData["userName"]}";
+
+    Layout = "../../../../Views/Shared/Layout/_Layout";
+}
+<div id="HrInfoOverView">
+    <div class="d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold py-3 mb-4">
+            <span class="text-muted fw-light">人力資源系統 /</span>
+            @ViewData["Title"]
+        </h4>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#MntHumResource" v-on:click="openDialog(0)">
+            <span class="tf-icons bx bx-add-to-queue"></span>
+            新增人力資料
+        </button>
+    </div>
+
+    <div class="card mb-4">
+        <h5 class="card-header">搜尋</h5>
+        <div class="card-body">
+            <div class="row gx-4 gy-2 align-items-center">
+                <div class="col mb-2">
+                    <div class="input-group" style="margin-right: 0.3875rem;">
+                        <label for="condi-name" class="input-group-text">姓名</label>
+                        <input type="text" id="condi-name" class="form-control" placeholder="請輸入要查詢的姓名" v-model="search.name">
+                    </div>
+                </div>
+                <div v-if="srcs.length > 0" class="col mb-2">
+                    <div class="input-group">
+                        <label for="condi-src" class="input-group-text">履歷來源</label>
+                        <select id="condi-src" class="form-select" v-model="search.src">
+                            <option value="">-- 全部 --</option>
+                            <option v-for="s in srcs" :value="s.id">{{s.name}}</option>
+                        </select>
+                    </div>
+                </div>
+                <div v-if="vac.length > 0" class="col mb-2">
+                    <div class="input-group">
+                        <label for="condi-src" class="input-group-text">職缺安排</label>
+                        <select id="condi-src" class="form-select" v-model="search.vac">
+                            <option value="">-- 全部 --</option>
+                            <option v-for="v in vac" :value="v.id">{{v.name}}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col mb-2">
+                    <div class="input-group">
+                        <label for="condi-sts" class="input-group-text">狀態</label>
+                        <select id="condi-sts" class="form-select" v-model="search.sts">
+                            <option value="">-- 全部 --</option>
+                            <option value="0">聯絡中</option>
+                            <option value="1">面試中</option>
+                            <option value="2">錄用</option>
+                            <option value="3">未錄用</option>
+                            <option value="4">已報到</option>
+                            <option value="5">未報到</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row gx-4 gy-2 align-items-center">
+                <div class="col-md-3 mb-2">
+                    <div class="input-group">
+                        <label for="condi-principal" class="input-group-text">負責人</label>
+                        <select id="condi-principal" class="form-select" v-model="search.principal">
+                            <option value="">-- 全部 --</option>
+                            <option value="alice">Alice</option>
+                            <option value="nina">Nina</option>
+                            <option value="tracy">Tracy</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row gx-3 gy-2 justify-content-end align-items-center">
+                <div class="col-md-3 d-flex justify-content-end">
+                    <button type="button" class="btn btn-primary d-block" v-on:click="searchByConditions">搜尋</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="infos.length > 0" class="card mb-4">
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th v-for="c in columns">{{c}}</th>
+                    </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                    <tr v-cloak v-for="i in infos">
+                        <td>
+                            {{i.name}}
+                            <img v-if="i.isBlocked" src="~/img/block-user.png" style="height: 24px" />
+                        </td>
+                        <td>{{i.sex === 0 ? '女' : '男'}}</td>
+                        <td>{{i.tel}}</td>
+                        <td>{{i.src}}</td>
+                        <td>
+                            <span style="white-space: pre-wrap;">
+                                {{i.arrange}}
+                            </span>
+                        </td>
+                        <td>{{i.status}}</td>
+                        <td>{{i.createAt}}</td>
+                        <td>{{i.creator}}</td>
+                        <td>{{i.principal}}</td>
+                        <td>
+                            <button type="button" class="btn btn-icon btn-outline-info" style="margin-right: 0.3875rem;"
+                                    data-bs-target="#MntHumResource" data-bs-toggle="modal" title="編輯"
+                                    v-on:click="openDialog(i.id)">
+                                <span class="tf-icons bx bx-edit"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-offset="0,12"
+                                      data-bs-placement="top"
+                                      data-bs-html="true"
+                                      data-bs-dismiss="tooltip"
+                                      data-bs-original-title="<span>編輯</span>"></span>
+                            </button>
+                            <button type="button" class="btn btn-icon btn-secondary" style="margin-right: 0.3875rem;" title="上傳附件"
+                                    data-bs-target="#UploadAttachment" data-bs-toggle="modal" v-on:click="openUploadDialog(i.id)">
+                                <span class="tf-icons bx bx-upload"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-offset="0,12"
+                                      data-bs-placement="top"
+                                      data-bs-html="true"
+                                      data-bs-dismiss="tooltip"
+                                      data-bs-original-title="<span>上傳附件</span>"></span>
+                            </button>
+                            <button type="button" class="btn btn-icon btn-danger" style="margin-right: 0.3875rem;" title="刪除" v-on:click="deleteHuman(i.id)">
+                                <span class="tf-icons bx bx-message-square-minus"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-offset="0,12"
+                                      data-bs-placement="top"
+                                      data-bs-html="true"
+                                      data-bs-dismiss="tooltip"
+                                      data-bs-original-title="<span>刪除</span>"></span>
+                            </button>
+                            <button v-if="!i.isBlocked" type="button" class="btn btn-icon btn-dark" v-on:click="blockHuman(i.id, true)" title="加入黑名單">
+                                <span class="tf-icons bx bx-user-x" style="font-size: 24px"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-offset="0,12"
+                                      data-bs-placement="top"
+                                      data-bs-html="true"
+                                      data-bs-dismiss="tooltip"
+                                      data-bs-original-title="<span>加入黑名單</span>"></span>
+                            </button>
+                            <button v-else type="button" class="btn btn-icon btn-warning" v-on:click="blockHuman(i.id, false)" title="解除黑名單">
+                                <span class="tf-icons bx bx-user-check" style="font-size: 24px"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-offset="0,12"
+                                      data-bs-placement="top"
+                                      data-bs-html="true"
+                                      data-bs-dismiss="tooltip"
+                                      data-bs-original-title="<span>解除黑名單</span>"></span>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div v-else class="d-flex justify-content-center align-items-center">
+        <span class="badge bg-label-danger">查無資料</span>
+    </div>
+    <div v-if="paginate.total > 1" class="card">
+        <div class="row">
+            <div class="demo-inline-spacing">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        <!-- 第一頁 -->
+                        <li v-if="paginate.total > 5 && paginate.prev !== 0" class="page-item first">
+                            <a class="page-link" href="javascript:void(0);" v-on:click="switchPage(1)"><i class="tf-icon bx bx-chevrons-left"></i></a>
+                        </li>
+                        <!-- 上一頁 -->
+                        <li v-if="paginate.prev !== 0" class="page-item prev">
+                            <a v-if="paginate.prev < 1" class="page-link" href="javascript:void(0);"><i class="tf-icon bx bx-chevron-left"></i></a>
+                            <a v-else class="page-link" href="javascript:void(0);" v-on:click="switchPage(paginate.prev)"><i class="tf-icon bx bx-chevron-left"></i></a>
+                        </li>
+                        <!-- 省略符號 -->
+                        <li v-if="paginate.total > 5 && paginate.current - 1 > 2" class="page-item">
+                            <div class="justify-content-center align-items-center" style="padding: 0.3875rem; margin-left: 0.1875rem;">
+                                <i class="tf-icons bx bx-dots-horizontal-rounded"></i>
+                            </div>
+                        </li>
+                        <!-- 頁碼 -->
+                        <li v-for="p in midPageIndexes" class="page-item" v-bind:class="{active: paginate.current === p}">
+                            <a class="page-link" href="javascript:void(0);" v-on:click="switchPage(p)">{{p}}</a>
+                        </li>
+                        <!-- 省略符號 -->
+                        <li v-if="paginate.total > 5 && paginate.total - paginate.current > 2" class="page-item">
+                            <div class="justify-content-center align-items-center" style="padding: 0.3875rem; margin-left: 0.1875rem;">
+                                <i class="tf-icons bx bx-dots-horizontal-rounded"></i>
+                            </div>
+                        </li>
+                        <!-- 下一頁 -->
+                        <li v-if="paginate.next <= paginate.total" class="page-item next">
+                            <a v-if="paginate.next > paginate.total" class="page-link" href="javascript:void(0);"><i class="tf-icon bx bx-chevron-right"></i></a>
+                            <a v-else class="page-link" href="javascript:void(0);" v-on:click="switchPage(paginate.next)"><i class="tf-icon bx bx-chevron-right"></i></a>
+                        </li>
+                        <!-- 最後一頁 -->
+                        <li v-if="paginate.total > 5 && paginate.current != paginate.total" class="page-item last">
+                            <a class="page-link" href="javascript:void(0);" v-on:click="switchPage(paginate.total)"><i class="tf-icon bx bx-chevrons-right"></i></a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <div id="MntHumResource" class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{hum.id === 0 ? '新增' : '編輯'}}資料</h5>
+                    <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-xxl">
+                            <div class="row mb-3">
+                                <label for="hum-name" class="col-sm-2 col-form-label"><span style="color: red">*</span>姓名</label>
+                                <div class="col-sm-10">
+                                    <input type="text" id="hum-name" class="form-control" v-model="hum.name" />
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label"><span style="color: red">*</span>性別</label>
+                                <div class="col-sm-10">
+                                    <div class="d-inline-flex">
+                                        <div class="form-check form-check-inline mt-1">
+                                            <input type="radio" id="hum-sex-0" name="hum-sex" class="form-check-input" value="0" v-model="hum.sex" />
+                                            <label for="hum-sex-0" class="form-check-label">女</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mt-1">
+                                            <input type="radio" id="hum-sex-1" name="hum-sex" class="form-check-input" value="1" v-model="hum.sex" />
+                                            <label for="hum-sex-1" class="form-check-label">男</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="hum-tel" class="col-sm-2 col-form-label">電話</label>
+                                <div class="col-sm-10">
+                                    <input type="tel" id="hum-tel" class="form-control" v-model="hum.tel" />
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="hum-tel" class="col-sm-2 col-form-label">Email</label>
+                                <div class="col-sm-10">
+                                    <input type="email" id="hum-email" class="form-control" v-model="hum.email" />
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="" class="col-sm-2 col-form-label">履歷來源</label>
+                                <div class="col-sm-10">
+                                    <select class="form-select" v-model="hum.src">
+                                        <option value="0">-- 請選擇 --</option>
+                                        <option v-for="s in srcs" :value="s.id">{{s.name}}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="" class="col-sm-2 col-form-label"><span style="color: red">*</span>職缺安排</label>
+                                <div class="col-sm-10">
+                                    <button type="button" class="btn btn-sm btn-info"
+                                            data-bs-target="#ChkVacancies" data-bs-toggle="modal" data-bs-dismiss="modal"
+                                            v-on:click="openVacDialog()">
+                                        選擇
+                                    </button>
+                                    <div v-if="relVac.length > 0" class="demo-inline-spacing mt-3">
+                                        <ol class="list-group list-group-numbered">
+                                            <li v-for="v in vacList" class="list-group-item">{{v.name}}</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">主要負責人</label>
+                                <div class="col-sm-10">
+                                    <select class="form-select" v-model="hum.principal">
+                                        <option value="">-- 請選擇 --</option>
+                                        <option value="alice">Alice</option>
+                                        <option value="nina">Nina</option>
+                                        <option value="tracy">Tracy</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">狀態</label>
+                                <div class="col-sm-10">
+                                    <div class="row">
+                                        <div v-for="r in Math.ceil(status.length / 10)" class="d-inline-flex">
+                                            <div v-for="(st, i) in subStatus(r, 10)" class="form-check form-check-inline m-1">
+                                                <input type="radio" :id="`hum-status-${st.val}`" name="hum-status" class="form-check-input" :value="st.val"
+                                                       v-model="hum.status" v-on:change="changeStatus($event)" />
+                                                <label :for="`hum-status-${st.val}`" class="form-check-label">{{st.name}}</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div v-if="isShowReasons" class="d-flex mt-1">
+                                            <label for="change-reason" class="col-sm-2 col-form-label">{{rsnLbl}}原因</label>
+                                            <div class="d-flex">
+                                                <select id="change-reason" class="form-select" style="margin-right: 0.3875rem;" v-model="reason">
+                                                    <option value="-1">-- 請選擇 --</option>
+                                                    <option v-for="opt in rsnOptions" :value="opt.id">{{opt.name}}</option>
+                                                    <option value="0">其他</option>
+                                                </select>
+                                                <input type="text" id="other-reason" class="form-control" v-model="otherRsn"
+                                                       v-bind:style="[parseInt(reason) !== 0 ? {'display' : 'none'} : {}]" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label class="col-sm-2 col-form-label">面試紀錄</label>
+                                <div class="col-sm-10">
+                                    <button type="button" class="btn btn-sm btn-info" v-on:click="addInterview">新增</button>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-12">
+                                    <ul v-if="hum.interviews.length > 0" class="list-group list-group-flush border">
+                                        <li v-for="itvw in hum.interviews" class="list-group-item">
+                                            <div class="row">
+                                                <div class="col-sm-3">{{itvw.time}}</div>
+                                                <div class="col-sm-2">{{itvw.creator}}</div>
+                                                <div class="col-sm-6">
+                                                    <textarea class="form-control" rows="3" v-model="itvw.content"></textarea>
+                                                </div>
+                                                <div class="col-sm-1">
+                                                    <button type="button" class="btn btn-sm btn-icon btn-danger" v-on:click="deleteItvw(itvw.id, itvw.uiId)">
+                                                        <span class="tf-icons bx bx-message-square-minus"
+                                                              data-bs-toggle="tooltip"
+                                                              data-bs-offset="0,12"
+                                                              data-bs-placement="top"
+                                                              data-bs-html="true"
+                                                              data-bs-dismiss="tooltip"
+                                                              data-bs-original-title="<span>刪除</span>"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                    <div v-else class="d-flex justify-content-center align-items-center">
+                                        <span class="badge bg-label-warning">尚未新增面試紀錄</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">關閉</button>
+                    <button v-if="hum.id === 0" type="button" class="btn btn-success" v-on:click="addHuman">儲存</button>
+                    <button v-else type="button" class="btn btn-success" v-on:click="saveChange(hum.id)">儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="ChkVacancies" class="modal fade" aria-hidden="true" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable" role="document">
+            <div v-if="isShowVac" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">勾選職缺安排</h5>
+                    <span class="badge bg-label-danger">※最多勾選三項</span>
+                    <button type="button" class="btn-close" v-on:click="isShowVac = !isShowVac"
+                            data-bs-target="#MntHumResource" data-bs-toggle="modal" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="accordion mt-3">
+                        <div v-if="vac.length > 0" class="card accordion-item">
+                            <h2 class="accordion-header" id="head">
+                                <button type="button" class="accordion-button bg-label-info"
+                                        data-bs-toggle="collapse" data-bs-target="#accord-vacancy"
+                                        aria-expanded="false" aria-controls="accord-vacancy">
+                                    職缺
+                                </button>
+                            </h2>
+                            <div id="accord-vacancy" class="accordion-collapse collapse show">
+                                <div class="list-group list-group-flush">
+                                    <label v-for="v in vac" class="list-group-item">
+                                        <input type="checkbox" class="form-check-input me-1"
+                                               :id="`vacancy-${v.id}`" :value="v.id"
+                                               v-bind:disabled="!isChecked(v.id) && chkedVacs.length >= 3"
+                                               v-bind:checked="isChecked(v.id)"
+                                               v-model="tempVac" /> {{`${v.name}${!v.isOpen ? ' (已關閉)' : ''}`}}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="d-flex justify-content-center align-items-center">
+                            <span class="badge bg-label-warning">尚未新增職缺資料，請至「職務資訊 > 職缺資訊」下新增</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" v-on:click="isShowVac = !isShowVac"
+                            data-bs-target="#MntHumResource" data-bs-toggle="modal" data-bs-dismiss="modal">
+                        關閉
+                    </button>
+                    <button type="button" class="btn btn-success" v-on:click="setRelations()"
+                            data-bs-target="#MntHumResource" data-bs-toggle="modal" data-bs-dismiss="modal">
+                        確定
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="UploadAttachment" class="modal fade" aria-hidden="true" tabindex="-1">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">上傳附件</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="formFileMultiple" class="form-label-lg">請選擇要上傳的檔案</label>
+                        <span class="badge bg-label-danger">每次只可上傳單一檔案</span>
+                        <input class="form-control" type="file" id="formFileMultiple" />
+                    </div>
+                    <div v-if="attachments.length > 0" class="mb-3">
+                        <div class="row row-cols-1 row-cols-md-2 g-4">
+                            <div v-for="atch in attachments" class="col">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-center align-items-center">
+                                            <a :href="`/API/HumRes/${atch.ext === 'pdf' ? 'Pdf' : 'Download'}/Attachment/${atch.id}${atch.ext === 'pdf' ? `/${atch.name}.${atch.ext}` : ''}`"
+                                               class="link-info" style="margin-right: 1rem;" target="_blank" :title="`${atch.name}.${atch.ext}`">
+                                                <span class="tf-icons bx bx-file" style="font-size: 2rem; margin-right: 0.3875rem;"></span>
+                                                <span>{{atch.name}}.{{atch.ext}}</span>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-icon rounded-pill btn-danger"
+                                                    v-on:click="deleteAttachment(atch.id)">
+                                                <span class="tf-icons bx bx-minus"
+                                                      data-bs-toggle="tooltip"
+                                                      data-bs-offset="0,12"
+                                                      data-bs-placement="top"
+                                                      data-bs-html="true"
+                                                      data-bs-dismiss="tooltip"
+                                                      data-bs-original-title="<span>刪除附件</span>"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">關閉</button>
+                    <button type="button" class="btn btn-success" v-on:click="uploadAttachments">上傳</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/hrHumanStatus.js"></script>
+<script type="text/javascript">
+    let overview = Vue.createApp({
+        data() {
+            return {
+                paginate: { total: 0, current: 1, prev: 0, next: 2, size: 10 },
+                search: { name: '', tel: '', src: '', vac: '', sts: '', principal: '' },
+                columns: ['姓名', '性別', '連絡電話', '履歷來源', '職缺安排', '狀態', '建檔日', '建檔人', '主要負責人', '功能'],
+                infos: [], isShowVac: false,
+                relVac: [], tempVac: [], oriStatus: -1,
+                vac: [], srcs: [],
+                hum: { id: 0, name: '', sex: -1, tel: '', email: '', src: 0, principal: '', status: -1, interviews: [] },
+                isShowReasons: false, rsnLbl: '', reason: -1, otherRsn: '',
+                rsnOptions: [], attachments: [],
+                status: HunamResourceStatus.filter(s => s.active).sort((a, b) => a.seq - b.seq),
+            }
+        },
+        created() { this.initialData(); },
+        computed: {
+            midPageIndexes() {
+                const cp = this.paginate.current;
+                const pc = this.paginate.total;
+                const si = cp - 2 <= 0 ? 1 : (cp - 2) > (pc - 5) ? pc - 5 + 1 : cp - 2;
+                const ei = cp + 2 > pc ? pc : (cp + 2) <= (pc - 5) ? pc - 5 + 1 : cp + 2;
+                const arrLen = ei - si + 1;
+
+                if (pc > 5) { return Array.from({ length: (arrLen < 5 ? 5 : arrLen) }, (_, i) => i + si); }
+                else { return Array.from({ length: pc }, (_, i) => i + si); }
+            },
+            chkedVacs() { return this.vac.filter(v => this.tempVac.includes(v.id)); },
+            vacList() { return this.vac.filter(v => this.relVac.includes(v.id)); },
+        },
+        methods: {
+            initialData() {
+                console.log(this.status);
+                console.log(Math.ceil(this.status.length / 10));
+                postMethod('/API/HumRes/InfoList', toggleLoading(true), (res) => { this.infos = res; }, true);
+                postMethod('/API/HumRes/InfoList/Total', null, (res) => {
+                    this.paginate.total = parseInt(res / this.paginate.size) + 1 * (res % this.paginate.size > 0);
+                }, true);
+                postMethod('/API/Job/JobInfos/All', null, (res) => { this.vac = res; }, true);
+                getMethod('/API/Params/Get/Options/4', null, (res) => { this.srcs = res; toggleLoading(false); }, true);
+            },
+            isChecked(id) { return this.tempVac.includes(id); },
+            setRelations() { this.relVac = this.tempVac; },
+            searchByConditions() {
+                this.paginate.current = 1;
+                const formData = {
+                    conditions: this.search,
+                    pagination: { current: 1, size: 10, },
+                };
+                postMethod('/API/HumRes/InfoList', toggleLoading(true), (res) => { this.infos = res; }, true, formData);
+                postMethod('/API/HumRes/InfoList/Total', null, (res) => {
+                    this.paginate.total = parseInt(res / this.paginate.size) + 1 * (res % this.paginate.size > 0);
+                    toggleLoading(false);
+                }, true, formData);
+            },
+            openDialog(id) {
+                this.isShowVac = false;
+                this.hum.id = id;
+                if (id === 0) {
+                    this.hum.name = '';
+                    this.hum.sex = -1;
+                    this.hum.tel = '';
+                    this.hum.email = '';
+                    this.hum.src = 0;
+                    this.hum.status = -1;
+                    this.hum.principal = '';
+                    this.hum.interviews = [];
+                    this.relVac = [];
+                    this.oriStatus = -1;
+                    this.isShowReasons = false;
+                    this.otherRsn = '';
+                } else {
+                    getMethod(`/API/HumRes/EditInfo/${id}`, null, (res) => {
+                        this.hum.name = res.name;
+                        this.hum.sex = res.sex;
+                        this.hum.tel = res.tel;
+                        this.hum.email = res.email;
+                        this.hum.src = res.src;
+                        this.hum.status = res.status;
+                        this.hum.principal = res.principal;
+                        this.hum.interviews = res.interviews;
+                        this.oriStatus = res.status;
+                        this.isShowReasons = res.status === 3 || res.status === 5;
+                        this.reason = res.reason;
+                        this.otherRsn = res.otherReason;
+                    }, false);
+                    getMethod(`/API/HumRes/Relations/${id}`, null, (res) => { this.relVac = res; }, false);
+                    if (this.isShowReasons) {
+                        const tid = parseInt(this.hum.status / 2);
+                        getMethod(`/API/HumRes/Options/${tid}`, null, (res) => { this.rsnOptions = res; }, false);
+                    }
+                }
+            },
+            openVacDialog() {
+                this.isShowVac = true;
+                this.tempVac = this.relVac;
+            },
+            openUploadDialog(id) {
+                $('#formFileMultiple').val('');
+                this.hum.id = id;
+                getMethod(`/API/HumRes/Attachments/${id}`, null, (res) => { this.attachments = res; }, true);
+            },
+            formatItvwTime(dateTime) { return formatDate(dateTime); },
+            subStatus(echelon, numOfMembers) {
+                var startIdx = (echelon - 1) * numOfMembers;
+                var endIdx = echelon * numOfMembers;
+                var subArr = this.status.slice(startIdx, endIdx);
+                console.log(subArr);
+                return subArr;
+            },
+            changeStatus(e) {
+                this.reason = -1;
+                this.otherRsn = '';
+
+                const trgVal = parseInt($(e.target).val());
+                this.isShowReasons = trgVal === 3 || trgVal === 5;
+                this.rsnLbl = $(e.target).siblings('label')[0].innerText;
+
+                if (this.isShowReasons) {
+                    const tid = parseInt(trgVal / 2);
+                    getMethod(`/API/HumRes/Options/${tid}`, null, (res) => { this.rsnOptions = res; }, false);
+                }
+            },
+            chkEssentialFields() {
+                if (this.hum.name === '') { alert('姓名為必填欄位'); return false; }
+                if (parseInt(this.hum.sex) === -1) { alert('性別為必選欄位'); return false; }
+                if (this.relVac.length === 0) { alert("請選擇職缺安排"); return false; }
+
+                return true;
+            },
+            addHuman() {
+                if (!this.chkEssentialFields()) { return false; }
+
+                let passCheck = true;
+                getMethod(`/API/HumRes/CheckIfExisted/${this.hum.name}/${this.hum.tel}`, null, (res) => { passCheck = !res; }, false);
+                if (!passCheck) {
+                    alert("此人才資料已有建立，請查詢並確認。")
+                    return false;
+                }
+
+                postMethod('/API/HumRes/Add/HumResInfo', null, (res) => { }, false, {
+                    name: this.hum.name,
+                    sex: this.hum.sex,
+                    tel: this.hum.tel,
+                    email: this.hum.email,
+                    src: this.hum.src,
+                    vacancies: this.relVac,
+                    oriStatus: this.oriStatus,
+                    status: this.hum.status,
+                    principal: this.hum.principal,
+                    interviews: this.hum.interviews
+                });
+                alert('新增成功');
+                $('#MntHumResource').modal('hide');
+
+                const formData = {
+                    conditions: this.search,
+                    pagination: { current: this.paginate.current, size: 10, },
+                };
+
+                postMethod('/API/HumRes/InfoList', toggleLoading(true), (res) => { this.infos = res; }, true, formData);
+                postMethod('/API/HumRes/InfoList/Total', null, (res) => {
+                    this.paginate.total = parseInt(res / this.paginate.size) + 1 * (res % this.paginate.size > 0);
+                    toggleLoading(false);
+                }, true);
+            },
+            addInterview() {
+                const itvwRows = this.hum.interviews.length;
+                const dateString = new Date().toISOString();
+                this.hum.interviews.splice(0, 0, {
+                    id: 0,
+                    uiId: itvwRows + 1,
+                    time: formatDate(new Date(dateString)),
+                    creator: '@Html.Raw(UserName)',
+                    content: ''
+                });
+            },
+            blockHuman(id, blocked) {
+                patchMethod(`/API/HumRes/Update/HumResInfo/${id}/${blocked}`, {}, (res) => {
+                    console.log(`Update human data: ${JSON.stringify(res)}`);
+                    let info = this.infos.find(i => i.id === res.id);
+                    info.isBlocked = res.isBlocked;
+                });
+            },
+            saveChange(id) {
+                if (!this.chkEssentialFields()) { return false; }
+
+                patchMethod('/API/HumRes/Update/HumResInfo', {
+                    id: id,
+                    name: this.hum.name,
+                    sex: this.hum.sex,
+                    tel: this.hum.tel,
+                    email: this.hum.email,
+                    src: this.hum.src,
+                    vacancies: this.relVac,
+                    status: this.hum.status,
+                    principal: this.hum.principal,
+                    oriStatus: this.oriStatus,
+                    interviews: this.hum.interviews,
+                    reason: this.reason,
+                    otherReason: this.otherRsn
+                }, (res) => {
+                    console.log(`Update human data: ${JSON.stringify(res)}`);
+                    alert('更新成功');
+                    $('#MntHumResource').modal('hide');
+                });
+
+                const formData = {
+                    conditions: this.search,
+                    pagination: { current: this.paginate.current, size: 10 },
+                };
+
+                postMethod('/API/HumRes/InfoList', toggleLoading(true), (res) => { this.infos = res; }, true, formData);
+                postMethod('/API/HumRes/InfoList/Total', null, (res) => {
+                    this.paginate.total = parseInt(res / this.paginate.size) + 1 * (res % this.paginate.size > 0);
+                    toggleLoading(false);
+                }, true, formData);
+            },
+            uploadAttachments() {
+                const file = $('#formFileMultiple')[0].files[0];
+                let upload = new Upload(file);
+                upload.doUpload(`/API/HumRes/Upload/Attachments/${this.hum.id}`);
+
+                $('#formFileMultiple').val('');
+                getMethod(`/API/HumRes/Attachments/${this.hum.id}`, null, (res) => { this.attachments = res; }, false);
+            },
+            deleteHuman(id) {
+                if (confirm('確定要刪除此職缺資料?')) {
+                    deleteMethod(`/API/HumRes/Delete/Info/${id}`, {}, (res) => {
+                        toggleLoading(true);
+
+                        console.log(`Delete human data: ${JSON.stringify(res)}`);
+
+                        const leftInfoCnt = this.infos.filter(i => i.id !== res.id).length;
+                        this.paginate.current = leftInfoCnt > 0 ? this.paginate.current : this.paginate.prev > 0 ? this.paginate.prev : 1;
+                        const formData = {
+                            conditions: this.search,
+                            pagination: {
+                                current: this.paginate.current,
+                                size: 10,
+                            },
+                        };
+
+                        postMethod('/API/HumRes/InfoList', null, (res) => { this.infos = res; }, true, formData);
+                        postMethod('/API/HumRes/InfoList/Total', null, (res) => {
+                            this.paginate.total = parseInt(res / this.paginate.size) + 1 * (res % this.paginate.size > 0);
+                        }, true, formData);
+                        toggleLoading(false);
+                    });
+                }
+            },
+            deleteItvw(id, uiId) {
+                if (id === 0) {
+                    this.hum.interviews = this.hum.interviews.filter(itvw => itvw.uiId !== uiId);
+                } else {
+                    if (confirm('確定刪除此筆面試紀錄?')) {
+                        deleteMethod(`/API/HumRes/Delete/Interview/${id}`, {}, (res) => {
+                            console.log(`Delete interview data: ${JSON.stringify(res)}`);
+                            this.hum.interviews = this.hum.interviews.filter(i => i.id !== res.id);
+                        });
+                    }
+                }
+            },
+            deleteAttachment(id) {
+                if (confirm('確定刪除此附件?')) {
+                    deleteMethod(`/API/HumRes/Delete/Attachment/${id}`, {}, (res) => {
+                        console.log(`Delete attachment data: ${JSON.stringify(res)}`);
+                        this.attachments = this.attachments.filter(i => i.id !== res.id);
+                    });
+                }
+            },
+            switchPage(p) {
+                this.paginate.current = p;
+                this.paginate.prev = p - 1;
+                this.paginate.next = p + 1;
+                const formData = {
+                    conditions: this.search,
+                    pagination: { current: p, size: 10, },
+                };
+                postMethod('/API/HumRes/InfoList', toggleLoading(true), (res) => {
+                    this.infos = res;
+                    toggleLoading(false);
+                }, true, formData);
+            },
+        },
+    }).mount('#HrInfoOverView');
+</script>

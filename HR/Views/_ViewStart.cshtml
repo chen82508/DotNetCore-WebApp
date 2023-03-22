@@ -1,0 +1,11 @@
+﻿@{
+    string ControllerName = $"{ViewContext.RouteData.Values["controller"]}";
+    if (ControllerName == "Login")
+    {
+        Layout = "Layout/_LoginLayout";
+    }
+    else
+    {
+        Layout = "Layout/_Layout";
+    }
+}

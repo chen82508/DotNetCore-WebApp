@@ -1,0 +1,88 @@
+﻿@{
+    ViewData["Title"] = "個資同意書";
+    Layout = "../../../../Views/Shared/Layout/_BlankLayout";
+}
+<div class="card mb-5">
+    <form method="post" action="/API/Profile/Agree">
+        <div class="card-header d-flex justify-content-center mt-3">
+            <h3>泛美群信集團各資保護聲明及蒐集處理利用同意書</h3>
+        </div>
+        <div class="card-body">
+            <p class="mx-5">
+                親愛的求職者，您好
+                <br />
+                泛美群信控股股份有限公司(下稱本公司)非常重視您的個人資料保護，因此我們制訂了個資保護聲明，我們於運用您的個人資料均遵守中華民國「個人資料保護法」相關要求，請您閱讀本聲明，以瞭解您的相關權益：
+            </p>
+        </div>
+        <hr class="m-0" style="height: 0.25rem;" />
+        <div class="card-body">
+            <ol class="mx-5 mt-3">
+                <li style="padding:.58rem .9375rem;">當您提供本履歷中的個人資料(含姓名、身分證字號、電話及住址等資料，以下簡稱個人資料)時，本公司蒐集您的個人資料係用於評估您所應徵的職缺或職務是否適合您，以及基於泛美群信控股股份有限公司之人資政策之處理與運用(包含但不限於企業營運、人才評估、人事管理與服務)。您所提供的資料，將依據本公司個人資料保護政策及規範提供最嚴格的管理及保護。</li>
+                <li style="padding:.58rem .9375rem;">您同意本公司以您所提供的個人資料用以確認您的身份、並與您進行聯絡、並提供您本公司之招募及行銷服務資訊，以及合於其他隱私權保護政策規範之使用方式。</li>
+                <li style="padding:.58rem .9375rem;">依據個人資料保護法第3條規定，針對您的個人資料，欲行使查閱、請求複製本、更正資料、要求停止處理利用或刪除等權利，除依據個人資料保護法及相關法令另有規定外，若您需要執行上述權利，請致電：本公司人力資源部07-2693988辦理，我們會儘速與您聯絡處理。但因本公司依法令執行職務或業務所必需者，本公司得拒絕之。</li>
+                <li style="padding:.58rem .9375rem;">您個人資料保留期限，以完成本個資使用聲明所載目的所必要的期間為準，但若法律要求或許可更長期間，則不在此限。</li>
+                <li style="padding:.58rem .9375rem;">您瞭解本聲明書符合個人資料保護法及相關法規之要求，具有書面同意本公司得依本聲明內容蒐集、處理及利用您的個人資料之效果；您所提供的資料，將依據本公司資訊安全政策及規範提供最嚴格的管理及保護。</li>
+                <li style="padding:.58rem .9375rem;">本人慎重聲明,以上所填各項均屬確實,若有虛報情事,願受免職處分。</li>
+            </ol>
+            <p class="mx-5">
+                此致
+                <br />
+                泛美群信控股股份有限公司
+            </p>
+        </div>
+        <hr class="m-0" style="height: 0.25rem;" />
+        <div class="card-footer">
+            <div class="mx-5 mb-3 mt-3">
+                <input class="form-check-input" id="consent-agree" name="consent-agree" type="checkbox" />
+                <label for="consent-agree">我已詳閱各資保護聲明及蒐集處理利用同意書，並完全同意貴司蒐集相關資料。</label>
+            </div>
+            <div class="d-flex justify-content-center">
+                <button id="btnToFillIn" class="btn btn-primary" type="submit">填寫履歷</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div id="agree-alert" class="bs-toast toast toast-placement-ex m-2 fade bg-warning top-0 start-50 translate-middle-x hide"
+     role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+        <i class="bx bx-bell me-2"></i>
+        <div class="me-auto fw-semibold">提醒</div>
+    </div>
+    <div class="toast-body">
+        請詳閱各資保護聲明及蒐集處理利用同意書，並勾選核取方塊。
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#btnToFillIn').click(function() {
+            const agree = $('#consent-agree').prop('checked');
+            if (!agree) {
+                $('#agree-alert').toast({ delay: 2000 });
+                $('#agree-alert').toast('show');
+                return false;
+            }
+            console.log('Click!!!');
+
+            //let fd = new FormData();
+            //fd.append('agree', agree);
+
+            //$.ajax({
+            //    url: '/API/Profile/Agree',
+            //    method: 'POST',
+            //    async: true,
+            //    data: fd,
+            //    beforeSend: toggleLoading(true),
+            //    success: (res) => {
+            //        console.log(res);
+            //        toggleLoading(false);
+            //    },
+            //    error: (err) => { console.log(err); },
+            //    contentType: false,
+            //    processData: false,
+            //    cache: false,
+            //});
+        });
+    });
+</script>

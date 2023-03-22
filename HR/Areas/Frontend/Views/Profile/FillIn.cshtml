@@ -1,0 +1,1079 @@
+﻿@{
+    ViewData["Title"] = "履歷表單";
+    Layout = "../../../../Views/Shared/Layout/_BlankLayout";
+}
+
+<div class="d-flex justify-content-center align-items-center">
+    <h3>履歷表單</h3>
+</div>
+<div id="FormCreateSteps">
+    <div class="card mb-5">
+        <div class="card-body">
+            <div id="stepperForm" class="bs-stepper linear">
+                <div class="bs-stepper-header" role="tablist">
+                    <div class="step" v-bind:class="{active: currStep === 1}" data-target="#form-step-1">
+                        <button type="button" class="step-trigger" role="tab" id="stepperFormTrigger1" aria-controls="form-step-1" aria-selected="true" v-bind:disabled="currStep !== 1">
+                            <span class="bs-stepper-circle">1</span>
+                            <span class="bs-stepper-label">基本資料</span>
+                        </button>
+                    </div>
+                    <div class="bs-stepper-line"></div>
+                    <div class="step" v-bind:class="{active: currStep === 2}" data-target="#form-step-2">
+                        <button type="button" class="step-trigger" role="tab" id="stepperFormTrigger2" aria-controls="form-step-2" aria-selected="false" v-bind:disabled="currStep !== 2">
+                            <span class="bs-stepper-circle">2</span>
+                            <span class="bs-stepper-label">工作經驗</span>
+                        </button>
+                    </div>
+                    <div class="bs-stepper-line"></div>
+                    <div class="step" v-bind:class="{active: currStep === 3}" data-target="#form-step-3">
+                        <button type="button" class="step-trigger" role="tab" id="stepperFormTrigger3" aria-controls="form-step-3" aria-selected="false" v-bind:disabled="currStep !== 3">
+                            <span class="bs-stepper-circle">3</span>
+                            <span class="bs-stepper-label">特殊身分與現況</span>
+                        </button>
+                    </div>
+                    <div class="bs-stepper-line"></div>
+                    <div class="step" v-bind:class="{active: currStep === 4}" data-target="#form-step-4">
+                        <button type="button" class="step-trigger" role="tab" id="stepperFormTrigger4" aria-controls="form-step-4" aria-selected="false" v-bind:disabled="currStep !== 4">
+                            <span class="bs-stepper-circle">4</span>
+                            <span class="bs-stepper-label">意向問答</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="bs-stepper-content">
+                    <div id="probation-form">
+                        <div id="form-step-1" role="tabpanel" class="bs-stepper-pane fade dstepper-block active" aria-labelledby="stepperFormTrigger1">
+                            <div class="form-group row mb-5 justify-content-between">
+                                <div class="col-md-3">
+                                    <label for="job-apply">
+                                        <span class="text-danger font-weight-bold">*</span>應徵職務
+                                    </label>
+                                    <select id="job-apply" v-model="fund.apply_job" class="form-select" required>
+                                        <option value="">--請選擇--</option>
+                                        <option v-for="j in jobs" :value="j.id">{{j.name}}</option>
+                                    </select>
+                                    <div class="invalid-feedback">請選擇應徵職務</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="inputGroupFile04">
+                                        <span class="text-danger font-weight-bold">*</span>上傳照片
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="file" class="form-control" id="photo" aria-describedby="addPersonalPhoto" aria-label="Upload" required />
+                                        <button class="btn btn-outline-primary" type="button" id="addPersonalPhoto" style="border-bottom-right-radius: 0.375rem; border-top-right-radius: 0.375rem;"
+                                                v-on:click="onFileChange('photo', 'photo')">
+                                            上傳
+                                        </button>
+                                        <div v-if="photo" class="invalid-feedback">請選擇並上傳一張照片</div>
+                                    </div>
+                                    <img v-if="photo_url" class="img-fluid w-50 mt-2" :src="photo_url" />
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <div class="col-md-3">
+                                    <label for="name">
+                                        <span class="text-danger font-weight-bold">*</span>姓名
+                                    </label>
+                                    <input id="name" type="text" class="form-control" placeholder="請輸入姓名" v-model="fund.name" required />
+                                    <div class="invalid-feedback">請輸入您的姓名</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="birthday">
+                                        <span class="text-danger font-weight-bold">*</span>出生日期
+                                    </label>
+                                    <input id="birthday" type="date" class="form-control" v-model="fund.birthday" required />
+                                    <div class="invalid-feedback">請選擇您的出生日期</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="d-block">
+                                        <span class="text-danger font-weight-bold">*</span>性別
+                                    </label>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input id="male" name="sex" type="radio" class="form-check-input" v-model="fund.sex" value="1" required />
+                                        <label for="male" class="form-check-label">男</label>
+                                        @*<div class="invalid-feedback" style="float: left">請選擇您的性別</div>*@
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input id="female" name="sex" type="radio" class="form-check-input" v-model="fund.sex" value="2" required />
+                                        <label for="female" class="form-check-label">女</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="d-block">
+                                        <span class="text-danger font-weight-bold">*</span>婚姻狀況
+                                    </label>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input id="unmarried" name="marriage" type="radio" class="form-check-input" v-model="fund.marriage" value="1" required />
+                                        <label for="unmarried" class="form-check-label">未婚</label>
+                                        @*<div class="invalid-feedback" style="float: left">請選擇您的婚姻狀況</div>*@
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input id="married" name="marriage" type="radio" class="form-check-input" v-model="fund.marriage" value="2" required />
+                                        <label for="married" class="form-check-label">已婚</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input id="have-children" name="marriage" type="radio" class="form-check-input" v-model="fund.marriage" value="3" required />
+                                        <label for="have-children" class="form-check-label">已有子女</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <div class="col-md-3">
+                                    <label for="phone">
+                                        <span class="text-danger font-weight-bold">*</span>電話
+                                    </label>
+                                    <input id="phone" type="tel" class="form-control" placeholder="請輸入電話號碼" v-model="fund.phone" required />
+                                    <div class="invalid-feedback">請輸入您的聯絡電話</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="email-account">
+                                        <span class="text-danger font-weight-bold">*</span>Mail
+                                    </label>
+                                    <div class="input-group">
+                                        <input id="email-account" type="text" class="form-control" v-model="fund.email.account" required>
+                                        <label for="email-host" class="input-group-text">@@</label>
+                                        <input id="email-host" type="text" class="form-control" style="border-bottom-right-radius: 0.375rem; border-top-right-radius: 0.375rem;"
+                                               v-model="fund.email.host" required>
+                                        <div class="invalid-feedback">請輸入您的Email</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="address">
+                                        <span class="text-danger font-weight-bold">*</span>地址
+                                    </label>
+                                    <input id="address" type="text" class="form-control" placeholder="請輸入地址" v-model="fund.address" required>
+                                    <div class="invalid-feedback">請輸入您的通訊地址</div>
+                                </div>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label><span class="text-danger font-weight-bold">*</span>最高學歷 1.</label>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label for="school-1">學校：</label>
+                                        <input class="form-control" id="school-1" type="text" v-model="fund.edu1.school" required />
+                                        <div class="invalid-feedback">請輸入最高學歷 1.的學校名稱</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="major-1">科系：</label>
+                                        <input class="form-control" id="major-1" type="text" v-model="fund.edu1.major" required />
+                                        <div class="invalid-feedback">請輸入最高學歷 1.的主修科系</div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <div class="form-check form-check-inline mt-1">
+                                            <input id="day-1" name="day-or-night-1" type="radio" class="form-check-input" v-model="fund.edu1.don" value="0" required />
+                                            <label for="day-1" class="form-check-label">日</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mt-1">
+                                            <input id="night-1" name="day-or-night-1" type="radio" class="form-check-input" v-model="fund.edu1.don" value="1" required />
+                                            <label for="night-1" class="form-check-label">夜</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <div class="form-check form-check-inline mt-1">
+                                            <input id="graduate-1" name="graduate-or-quit-1" type="radio" class="form-check-input" v-model="fund.edu1.goq" value="1" required />
+                                            <label for="graduate-1" class="form-check-label">畢</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mt-1">
+                                            <input id="quit-1" name="graduate-or-quit-1" type="radio" class="form-check-input" v-model="fund.edu1.goq" value="0" required />
+                                            <label for="quit-1" class="form-check-label">肄</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="period-start-1">就讀期間</label>
+                                        <div class="input-group">
+                                            <input id="period-start-1" type="month" class="form-control" v-model="fund.edu1.start" required>
+                                            <label for="period-end-1" class="input-group-text">至</label>
+                                            <input id="period-end-1" type="month" class="form-control" style="border-bottom-right-radius: 0.375rem; border-top-right-radius: 0.375rem;"
+                                                   v-model="fund.edu1.end" required>
+                                            <div class="invalid-feedback">請選擇最高學歷 1.的就讀科系</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label for="emp-email"><span class="text-danger font-weight-bold">*</span>最高學歷 2.</label>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label for="school-2">學校：</label>
+                                        <input class="form-control" id="school-2" type="text" v-model="fund.edu2.school" required />
+                                        <div class="invalid-feedback">請輸入最高學歷 2.的學校名稱</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="major-2">科系：</label>
+                                        <input class="form-control" id="major-2" type="text" v-model="fund.edu2.major" required />
+                                        <div class="invalid-feedback">請輸入最高學歷 2.的科系名稱</div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <div class="form-check form-check-inline mt-1">
+                                            <input id="day-2" name="day-or-night-2" type="radio" class="form-check-input" v-model="fund.edu2.don" value="0" required />
+                                            <label for="day-2" class="form-check-label">日</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mt-1">
+                                            <input id="night-2" name="day-or-night-2" type="radio" class="form-check-input" v-model="fund.edu2.don" value="1" required />
+                                            <label for="night-2" class="form-check-label">夜</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <div class="form-check form-check-inline mt-1">
+                                            <input id="graduate-2" name="graduate-or-quit-2" type="radio" class="form-check-input" v-model="fund.edu2.goq" value="1" required />
+                                            <label for="graduate-2" class="form-check-label">畢</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mt-1">
+                                            <input id="quit-2" name="graduate-or-quit-2" type="radio" class="form-check-input" v-model="fund.edu2.goq" value="0" required />
+                                            <label for="quit-2" class="form-check-label">肄</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="period-start-2">就讀期間</label>
+                                        <div class="input-group">
+                                            <input id="period-start-2" type="month" class="form-control" v-model="fund.edu2.start" required>
+                                            <label for="period-end-2" class="input-group-text">至</label>
+                                            <input id="period-end-2" type="month" class="form-control" style="border-bottom-right-radius: 0.375rem; border-top-right-radius: 0.375rem;"
+                                                   v-model="fund.edu2.end" required>
+                                            <div class="invalid-feedback">請選擇最高學歷 2.的就讀期間</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <button class="btn btn-primary btn-next-form" type="button" v-on:click="next()">下一步</button>
+                            </div>
+                        </div>
+                        <div id="form-step-2" role="tabpanel" class="bs-stepper-pane fade dstepper-block dstepper-none" aria-labelledby="stepperFormTrigger2">
+                            <div class="form-group row mb-3">
+                                <div class="col-md-3">
+                                    <button class="btn btn-outline-success" type="button" v-on:click="addExperience()">
+                                        <span class="tf-icons bx bx-add-to-queue" style="pointer-events: none;"></span>新增經歷
+                                    </button>
+                                </div>
+                            </div>
+                            <div v-if="experiences.length === 0" class="d-flex justify-content-center align-items-center mb-3">
+                                <span class="badge bg-label-warning">尚未新增工作經歷</span>
+                            </div>
+                            <div v-else class="table-responsive mb-3">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>移除</th>
+                                            <th class="col-md-2"><span class="text-danger font-weight-bold">*</span>服務機關</th>
+                                            <th class="col-md-2"><span class="text-danger font-weight-bold">*</span>職稱</th>
+                                            <th class="col-md-2"><span class="text-danger font-weight-bold">*</span>服務時間</th>
+                                            <th class="col-md-2"><span class="text-danger font-weight-bold">*</span>待遇</th>
+                                            <th class="col-md-3"><span class="text-danger font-weight-bold">*</span>離職原因</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="exp in experiences">
+                                            <td>
+                                                <button class="btn rounded-pill btn-icon btn-sm btn-outline-danger" type="button" v-on:click="removeExperience(exp.sn)">
+                                                    <span class="tf-icons bx bx-minus" style="pointer-events: none;"></span>
+                                                </button>
+                                            </td>
+                                            <td>
+                                                <input class="form-control" :id="`exp-agency-${exp.sn}`" type="text" v-model="exp.agency" required />
+                                                <div class="invalid-feedback">請填寫服務機關</div>
+                                            </td>
+                                            <td>
+                                                <input class="form-control" :id="`exp-jobTitle-${exp.sn}`" type="text" v-model="exp.jobTitle" required />
+                                                <div class="invalid-feedback">請填寫服務機關</div>
+                                            </td>
+                                            <td>
+                                                <label :for="`exp-period-start-${exp.sn}`" class="m-2">自</label>
+                                                <input :id="`exp-period-start-${exp.sn}`" type="month" class="form-control" v-model="exp.period_start" required />
+                                                <label :for="`exp-period-end-${exp.sn}`" class="m-2">至</label>
+                                                <input :id="`exp-period-end-${exp.sn}`" type="month" class="form-control" style="border-bottom-right-radius: 0.375rem; border-top-right-radius: 0.375rem;"
+                                                       v-model="exp.period_end" required />
+                                            </td>
+                                            <td>
+                                                <div class="form-check form-check-inline mb-2">
+                                                    <input class="form-check-input" type="radio" :name="`salary-standard-${exp.sn}`" :id="`rdoMonthly-${exp.sn}`" value="0" v-model="exp.salary.standard" required />
+                                                    <label class="form-check-label" :for="`rdoMonthly-${exp.sn}`">月薪</label>
+                                                </div>
+                                                <div class="form-check form-check-inline mb-2">
+                                                    <input class="form-check-input" type="radio" :name="`salary-standard-${exp.sn}`" :id="`rdoAnnual-${exp.sn}`" value="1" v-model="exp.salary.standard" required />
+                                                    <label class="form-check-label" :for="`rdoAnnual-${exp.sn}`">年薪</label>
+                                                </div>
+                                                <input class="form-control" :id="`salary-amount-${exp.sn}`" type="number" v-model="exp.salary.amount" required />
+                                                <div class="invalid-feedback">請填寫薪資</div>
+                                            </td>
+                                            <td>
+                                                <textarea class="form-control" :id="`leaving_reason-${exp.sn}`" rows="3" v-model="exp.leaving_reason" required></textarea>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-center">
+                                <button class="btn btn-secondary btn-next-form" style="margin-right: 0.5rem" type="button" v-on:click="previous()">上一步</button>
+                                <button class="btn btn-primary btn-next-form" type="button" v-on:click="next()">下一步</button>
+                            </div>
+                        </div>
+                        <div id="form-step-3" role="tabpanel" class="bs-stepper-pane fade dstepper-none" aria-labelledby="stepperFormTrigger3">
+                            <div class="form-group row mb-2">
+                                <div class="col-md-6">
+                                    <label class="d-block"><span class="text-danger font-weight-bold">*</span>特殊身分</label>
+                                    <div class="invalid-feedback">請輸入其他特殊身分</div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="checkbox" id="spc-status-0" name="spc-status" v-model="status.special.id"
+                                               v-on:change="chkboxesChange('spc-status')" value="0" required />
+                                        <label class="form-check-label" for="spc-status-0">無</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="checkbox" id="spc-status-1" name="spc-status" v-model="status.special.id"
+                                               v-on:change="chkboxesChange('spc-status')" value="1" required />
+                                        <label class="form-check-label" for="spc-status-1">原住民</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="checkbox" id="spc-status-2" name="spc-status" v-model="status.special.id"
+                                               v-on:change="chkboxesChange('spc-status')" value="2" required />
+                                        <label class="form-check-label" for="spc-status-2">身心障礙</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="checkbox" id="spc-status-3" name="spc-status" v-model="status.special.id"
+                                               v-on:change="chkboxesChange('spc-status')" value="3" required />
+                                        <label class="form-check-label" for="spc-status-3">外籍人士</label>
+                                    </div>
+                                    <div class="form-check mt-1">
+                                        <input class="form-check-input" type="checkbox" id="spc-status-4" name="spc-status" v-model="status.special.id"
+                                               v-on:change="chkboxesChange('spc-status')" value="4" required />
+                                        <label class="form-check-label" for="spc-status-4">其他</label>
+                                        <input class="form-control w-50" type="text" id="spc-other" v-model="status.special.other"
+                                               v-bind:placeholder="`${enableOtherSpcId ? '請說明其他身分為何' : ''}`" v-bind:disabled="!enableOtherSpcId" v-bind:required="enableOtherSpcId" />
+                                        <div v-if="enableOtherSpcId" class="invalid-feedback">請輸入其他特殊身分</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="d-block">
+                                        <span class="text-danger font-weight-bold">*</span>經濟狀況
+                                    </label>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="checkbox" id="eco-status-1" name="eco-status" v-model="status.eco"
+                                               v-on:change="chkboxesChange('eco-status')" value="1" required>
+                                        <label class="form-check-label" for="eco-status-1">自給自足</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="checkbox" id="eco-status-2" name="eco-status" v-model="status.eco"
+                                               v-on:change="chkboxesChange('eco-status')" value="2" required>
+                                        <label class="form-check-label" for="eco-status-2">負擔父母/妻兒</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="checkbox" id="eco-status-3" name="eco-status" v-model="status.eco"
+                                               v-on:change="chkboxesChange('eco-status')" value="3" required>
+                                        <label class="form-check-label" for="eco-status-3">租屋/房貸壓力</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="checkbox" id="eco-status-4" name="eco-status" v-model="status.eco"
+                                               v-on:change="chkboxesChange('eco-status')" value="4" required>
+                                        <label class="form-check-label" for="eco-status-4">無經濟壓力</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <div v-if="isMale" class="col-md-6">
+                                    <label class="d-block">
+                                        <span class="text-danger font-weight-bold">*</span>兵役狀況
+                                    </label>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="radio" id="ms-status-1" name="ms-status" v-model="status.ms.state" value="1" required />
+                                        <label class="form-check-label" for="ms-status-1">役畢</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="radio" id="ms-status-2" name="ms-status" v-model="status.ms.state" value="2" required />
+                                        <label class="form-check-label" for="ms-status-2">未役</label>
+                                    </div>
+                                    <div class="form-check mt-1">
+                                        <input class="form-check-input" type="radio" id="ms-status-3" name="ms-status" v-model="status.ms.state" value="3" required />
+                                        <label class="form-check-label" for="ms-status-3">免役，原因：</label>
+                                    </div>
+                                    <div style="padding-left: 25px;">
+                                        <input class="form-control" type="text" id="ms-reason" v-bind:disabled="!selectImmunity" v-model="status.ms.reason" v-bind:required="selectImmunity" />
+                                        <div v-if="selectImmunity" class="invalid-feedback">請輸入免役原因</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="d-block">
+                                        <span class="text-danger font-weight-bold">*</span>對工作最重視的項目為何
+                                    </label>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="checkbox" id="focus-item-1" name="focus-status" v-model="status.focus.items"
+                                               v-on:change="chkboxesChange('focus-status')" value="1" required />
+                                        <label class="form-check-label" for="focus-item-1">擔負更大的責任</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="checkbox" id="focus-item-2" name="focus-status" v-model="status.focus.items"
+                                               v-on:change="chkboxesChange('focus-status')" value="2" required />
+                                        <label class="form-check-label" for="focus-item-2">薪資</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="checkbox" id="focus-item-3" name="focus-status" v-model="status.focus.items"
+                                               v-on:change="chkboxesChange('focus-status')" value="3" required />
+                                        <label class="form-check-label" for="focus-item-3">工作保障</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="checkbox" id="focus-item-4" name="focus-status" v-model="status.focus.items"
+                                               v-on:change="chkboxesChange('focus-status')" value="4" required />
+                                        <label class="form-check-label" for="focus-item-4">新領域與挑戰性</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="checkbox" id="focus-item-5" name="focus-status" v-model="status.focus.items"
+                                               v-on:change="chkboxesChange('focus-status')" value="5" required />
+                                        <label class="form-check-label" for="focus-item-5">訓練與發展機會</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="checkbox" id="focus-item-6" name="focus-status" v-model="status.focus.items"
+                                               v-on:change="chkboxesChange('focus-status')" value="6" required />
+                                        <label class="form-check-label" for="focus-item-6">工作地點</label>
+                                    </div>
+                                    <div class="form-check mt-1">
+                                        <input class="form-check-input" type="checkbox" id="focus-item-7" name="focus-status" v-model="status.focus.items"
+                                               v-on:change="chkboxesChange('focus-status')" value="7" required />
+                                        <label class="form-check-label" for="focus-item-7">其他</label>
+                                        <input class="form-control w-50" type="text" id="status.focus.other" v-model="status.other_focus"
+                                               v-bind:placeholder="`${enableOtherFocus ? '請說明其他重視項目為何' : ''}`" v-bind:disabled="!enableOtherFocus" v-bind:required="enableOtherFocus" />
+                                        <div v-if="enableOtherFocus" class="invalid-feedback">請輸入其他重視項目</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <label class="d-block">專業證照&emsp;<small class="text-light">各項證照皆可登錄</small></label>
+                                <div class="col-md-4">
+                                    <label class="col-md-4 col-form-label-lg">金融類</label>
+                                    <div class="col-md-8 align-self-center d-flex">
+                                        <input id="" class="form-control" placeholder="" v-model="license_name.financial" type="text" v-on:keydown.enter="addLicence(1)" />
+                                        <button class="btn rounded-pill btn-icon btn-sm btn-outline-success m-1" type="button" v-on:click="addLicence(1)">
+                                            <span class="tf-icons bx bx-plus" style="pointer-events: none;"></span>
+                                        </button>
+                                    </div>
+                                    <ul v-if="status.license.financial.length > 0" class="nav nav-pills mb-3">
+                                        <li v-for="l in status.license.financial" class="nav-item">
+                                            <button class="btn rounded-pill btn-outline-info m-1" type="button" style="cursor: default;">
+                                                {{l}}&nbsp;
+                                                <span class="badge rounded-pill badge-center h-px-20 w-px-20 bg-danger" style="cursor: pointer;"
+                                                      v-on:click="removeLicense(1, l)">
+                                                    <span class="tf-icons bx bx-x" style="pointer-events: none;"></span>
+                                                </span>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="col-md-4 col-form-label-lg">不動產類</label>
+                                    <div class="col-md-8 align-self-center d-flex">
+                                        <input id="" class="form-control" placeholder="" v-model="license_name.realEstate" type="text" v-on:keydown.enter="addLicence(2)" />
+                                        <button class="btn rounded-pill btn-icon btn-sm btn-outline-success m-1" type="button" v-on:click="addLicence(2)">
+                                            <span class="tf-icons bx bx-plus" style="pointer-events: none;"></span>
+                                        </button>
+                                    </div>
+                                    <ul v-if="status.license.realEstate.length > 0" class="nav nav-pills mb-3">
+                                        <li v-for="l in status.license.realEstate" class="nav-item">
+                                            <button class="btn rounded-pill btn-outline-info m-1" type="button" style="cursor: default;">
+                                                {{l}}&nbsp;
+                                                <span class="badge rounded-pill badge-center h-px-20 w-px-20 bg-danger" style="cursor: pointer;"
+                                                      v-on:click="removeLicense(2, l)">
+                                                    <span class="tf-icons bx bx-x" style="pointer-events: none;"></span>
+                                                </span>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="col-md-4 col-form-label-lg">資訊類</label>
+                                    <div class="col-md-8 align-self-center d-flex">
+                                        <input id="" class="form-control" placeholder="" v-model="license_name.IT" type="text" v-on:keydown.enter="addLicence(3)" />
+                                        <button class="btn rounded-pill btn-icon btn-sm btn-outline-success m-1" type="button" v-on:click="addLicence(3)">
+                                            <span class="tf-icons bx bx-plus" style="pointer-events: none;"></span>
+                                        </button>
+                                    </div>
+                                    <ul v-if="status.license.IT.length > 0" class="nav nav-pills mb-3">
+                                        <li v-for="l in status.license.IT" class="nav-item">
+                                            <button class="btn rounded-pill btn-outline-info m-1" type="button" style="cursor: default;">
+                                                {{l}}&nbsp;
+                                                <span class="badge rounded-pill badge-center h-px-20 w-px-20 bg-danger" style="cursor: pointer;"
+                                                      v-on:click="removeLicense(3, l)">
+                                                    <span class="tf-icons bx bx-x" style="pointer-events: none;"></span>
+                                                </span>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="col-md-4 col-form-label-lg">法律類</label>
+                                    <div class="col-md-8 align-self-center d-flex">
+                                        <input id="" class="form-control" placeholder="" v-model="license_name.legal" type="text" v-on:keydown.enter="addLicence(4)" />
+                                        <button class="btn rounded-pill btn-icon btn-sm btn-outline-success m-1" type="button" v-on:click="addLicence(4)">
+                                            <span class="tf-icons bx bx-plus" style="pointer-events: none;"></span>
+                                        </button>
+                                    </div>
+                                    <ul v-if="status.license.legal.length > 0" class="nav nav-pills mb-3">
+                                        <li v-for="l in status.license.legal" class="nav-item">
+                                            <button class="btn rounded-pill btn-outline-info m-1" type="button" style="cursor: default;">
+                                                {{l}}&nbsp;
+                                                <span class="badge rounded-pill badge-center h-px-20 w-px-20 bg-danger" style="cursor: pointer;"
+                                                      v-on:click="removeLicense(4, l)">
+                                                    <span class="tf-icons bx bx-x" style="pointer-events: none;"></span>
+                                                </span>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="col-md-4 col-form-label-lg">其他</label>
+                                    <div class="col-md-8 align-self-center d-flex">
+                                        <input id="" class="form-control" placeholder="" v-model="license_name.other" type="text" v-on:keydown.enter="addLicence(5)" />
+                                        <button class="btn rounded-pill btn-icon btn-sm btn-outline-success m-1" type="button" v-on:click="addLicence(5)">
+                                            <span class="tf-icons bx bx-plus" style="pointer-events: none;"></span>
+                                        </button>
+                                    </div>
+                                    <ul v-if="status.license.other.length > 0" class="nav nav-pills mb-3">
+                                        <li v-for="l in status.license.other" class="nav-item">
+                                            <button class="btn rounded-pill btn-outline-info m-1" type="button" style="cursor: default;">
+                                                {{l}}&nbsp;
+                                                <span class="badge rounded-pill badge-center h-px-20 w-px-20 bg-danger" style="cursor: pointer;"
+                                                      v-on:click="removeLicense(5, l)">
+                                                    <span class="tf-icons bx bx-x" style="pointer-events: none;"></span>
+                                                </span>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <button class="btn btn-secondary btn-next-form" style="margin-right: 0.5rem" type="button" v-on:click="previous()">上一步</button>
+                                <button class="btn btn-primary btn-next-form" type="button" v-on:click="next()">下一步</button>
+                            </div>
+                        </div>
+                        <div id="form-step-4" role="tabpanel" class="bs-stepper-pane fade dstepper-none" aria-labelledby="stepperFormTrigger3">
+                            <div class="form-group row mb-2">
+                                <div class="col-md-3">
+                                    <label for="qa-1">
+                                        <span class="text-danger font-weight-bold">*</span>您的每月固定支出約多少？
+                                    </label>
+                                    <input id="qa-1" type="number" class="form-control" placeholder="" v-model="q_and_a.charges" required />
+                                    <div class="invalid-feedback">請輸入每月固定支出</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="qa-2">
+                                        <span class="text-danger font-weight-bold">*</span>如獲任用，何時可以報到？
+                                    </label>
+                                    <input id="qa-2" type="date" class="form-control" placeholder="" v-model="q_and_a.registration_day" required />
+                                    <div class="invalid-feedback">請選擇可報到日期</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="d-block">
+                                        <span class="text-danger font-weight-bold">*</span>您期望的薪資待遇
+                                    </label>
+                                    <div class="input-group">
+                                        <input id="qa-3-lowest" type="number" class="form-control" placeholder="" v-model="q_and_a.expected_salary.lowest"
+                                               v-bind:disabled="q_and_a.expected_salary.negotiable" v-bind:required="!q_and_a.expected_salary.negotiable" />
+                                        <label class="input-group-text">~</label>
+                                        <input id="qa-3-highest" type="number" class="form-control" placeholder="" v-model="q_and_a.expected_salary.highest"
+                                               v-bind:disabled="q_and_a.expected_salary.negotiable" v-bind:required="!q_and_a.expected_salary.negotiable"
+                                               style="border-bottom-right-radius: 0.375rem; border-top-right-radius: 0.375rem;" />
+                                        <div v-if="!q_and_a.expected_salary.negotiable" class="invalid-feedback">請輸入您的期望待遇</div>
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input id="negotiable" type="checkbox" class="form-check-input" v-model="q_and_a.expected_salary.negotiable" />
+                                        <label for="negotiable" class="form-check-label">面議</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <div class="col-md-6">
+                                    <label class="d-block">
+                                        <span class="text-danger font-weight-bold">*</span>是否曾有任何犯罪紀錄，或其他違法及訴訟案件？
+                                    </label>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="radio" id="qa-4-false" name="qa-4" v-model="q_and_a.criminal_record.exists" value="0" required />
+                                        <label class="form-check-label" for="qa-4-false">否</label>
+                                    </div>
+                                    <div class="form-check mt-1">
+                                        <input class="form-check-input" type="radio" id="qa-4-true" name="qa-4" v-model="q_and_a.criminal_record.exists" value="1" required />
+                                        <label class="form-check-label" for="qa-4-true">是，原因：</label>
+                                        <input class="form-control" type="text" id="qa-4-reason" v-bind:disabled="!enableCriminalReason" v-model="q_and_a.criminal_record.reason" v-bind:required="enableCriminalReason" />
+                                        <div v-if="enableCriminalReason" class="invalid-feedback">請輸入有犯罪紀錄原因</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="d-block">
+                                        <span class="text-danger font-weight-bold">*</span>是否同意本公司於錄取後聯繫你前公司或主管，讓我們更了解你是否可勝任此職務？
+                                    </label>
+                                    <div class="form-check mt-1">
+                                        <input class="form-check-input" type="radio" id="qa-5-true" name="qa-5" v-model="q_and_a.notify.agree" value="1" required />
+                                        <label class="form-check-label" for="qa-5-true">是，照會公司/主管名稱：</label>
+                                        <input class="form-control w-50" type="text" id="qa-5-note" v-model="q_and_a.notify.name"
+                                               v-bind:disabled="!enableNotifyName" v-bind:required="enableNotifyName" />
+                                        <div v-if="enableNotifyName" class="invalid-feedback">請輸入照會公司/主管名稱</div>
+                                    </div>
+                                    <div class="form-check form-check-inline mt-1">
+                                        <input class="form-check-input" type="radio" id="qa-5-false" name="qa-5" v-model="q_and_a.notify.agree" value="0" required />
+                                        <label class="form-check-label" for="qa-5-false">否</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <div class="col-md-6">
+                                    <label class="d-block">專業進修&emsp;<small class="text-light">填寫課程名稱</small></label>
+                                    <div class="col-md-6 align-self-center d-flex">
+                                        <input id="" class="form-control" placeholder="" v-model="adv_study_name" type="text" v-on:keydown.enter="addAdvStudy()" />
+                                        <button class="btn rounded-pill btn-icon btn-sm btn-outline-success m-1" type="button" v-on:click="addAdvStudy()">
+                                            <span class="tf-icons bx bx-plus" style="pointer-events: none;"></span>
+                                        </button>
+                                    </div>
+                                    <ul v-if="q_and_a.advanced_study.length > 0" class="nav nav-pills mb-3">
+                                        <li v-for="s in q_and_a.advanced_study" class="nav-item">
+                                            <button class="btn rounded-pill btn-outline-info m-1" type="button" style="cursor: default;">
+                                                {{s}}&nbsp;
+                                                <span class="badge rounded-pill badge-center h-px-20 w-px-20 bg-danger" style="cursor: pointer;"
+                                                      v-on:click="removeAdvStudy(s)">
+                                                    <span class="tf-icons bx bx-x" style="pointer-events: none;"></span>
+                                                </span>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="d-block">其他附件&emsp;<small class="text-light">作品集、進修證書、自傳、測驗答案卷...等皆可</small></label>
+                                    <div class="input-group">
+                                        <input class="form-control" type="file" id="other-attachment" multiple required />
+                                        <button class="btn btn-outline-primary" type="button" id="addPersonalPhoto" style="border-bottom-right-radius: 0.375rem; border-top-right-radius: 0.375rem;"
+                                                v-on:click="onFileChange('other-attachment', 'attachment')">
+                                            上傳
+                                        </button>
+                                    </div>
+                                    <ul v-if="attachments.length > 0" class="nav nav-pills mb-3">
+                                        <li v-for="attach in attachments" class="nav-item">
+                                            <button class="btn rounded-pill btn-outline-info m-1" type="button" style="cursor: default;">
+                                                {{attach.name}}&nbsp;
+                                                <span class="badge rounded-pill badge-center h-px-20 w-px-20 bg-danger" style="cursor: pointer;"
+                                                      v-on:click="removeAttachment(attach)">
+                                                    <span class="tf-icons bx bx-x" style="pointer-events: none;"></span>
+                                                </span>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <div class="col-md-6">
+                                    <label class="d-block">個人網址&emsp;<small class="text-light">Github或Linkedin等等，皆可新增</small></label>
+                                    <div class="col-md-12 align-self-center d-flex">
+                                        <input id="" class="form-control" placeholder="" v-model="personal_url" type="text" v-on:keydown.enter="addPersonalUrl()" />
+                                        <button class="btn rounded-pill btn-icon btn-sm btn-outline-success m-1" type="button" v-on:click="addPersonalUrl()">
+                                            <span class="tf-icons bx bx-plus" style="pointer-events: none;"></span>
+                                        </button>
+                                    </div>
+                                    <ul v-if="q_and_a.personal_urls.length > 0" class="nav nav-pills mb-3">
+                                        <li v-for="p in q_and_a.personal_urls" class="nav-item">
+                                            <span class="btn rounded-pill btn-outline-info m-1" type="button" style="cursor: default;">
+                                                <a :href="p" target="_blank">{{p}}</a>&nbsp;
+                                                <span class="badge rounded-pill badge-center h-px-20 w-px-20 bg-danger" style="cursor: pointer;"
+                                                      v-on:click="removePersonalUrl(p)">
+                                                    <span class="tf-icons bx bx-x" style="pointer-events: none;"></span>
+                                                </span>
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="d-block"><span class="text-danger font-weight-bold">*</span>應徵動機&emsp;<small class="text-light">最少請以100字描述</small></label>
+                                    <textarea class="form-control" id="qa-8" rows="7" v-model="q_and_a.motivation" required></textarea>
+                                </div>
+                            </div>
+                            <div class="text-center mt-3">
+                                <button class="btn btn-secondary btn-next-form" style="margin-right: 0.5rem" type="button" v-on:click="previous()">上一步</button>
+                                <button type="submit" class="btn btn-primary" v-on:click="submit()">提交並進入測驗</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="form-alert" class="bs-toast toast toast-placement-ex m-2 fade bg-warning top-0 start-50 translate-middle-x hide"
+     role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+        <i class="bx bx-bell me-2"></i>
+        <div class="me-auto fw-semibold">提醒</div>
+    </div>
+    <div id="alert-message" class="toast-body"></div>
+</div>
+
+<script type="text/javascript">
+    const app = Vue.createApp({
+        data() {
+            return {
+                jobs: [],
+                currStep: 1,
+                photo: null,
+                fund: {
+                    apply_job: '',
+                    name: '',
+                    birthday: '',
+                    sex: '',
+                    marriage: '',
+                    phone: '',
+                    email: { account: '', host: '' },
+                    address: '',
+                    edu1: { school: '', major: '', don: '', goq: '', start: '', end: '' },
+                    edu2: { school: '', major: '', don: '', goq: '', start: '', end: '' },
+                },
+                experiences: [],
+                status: {
+                    special: { id: [], other: '' },
+                    eco: [],
+                    ms: { state: '', reason: '' },
+                    license: { financial: [], realEstate: [], IT: [], legal: [], other: [] },
+                    focus: { items: [], other: '' },
+                },
+                attachments: [],
+                q_and_a: {
+                    charges: '',
+                    expected_salary: { lowest: '', highest: '', negotiable: false },
+                    registration_day: '',
+                    criminal_record: { exists: '', reason: '' },
+                    notify: { agree: '', name: '' },
+                    advanced_study: [],
+                    personal_urls: [],
+                    motivation: '',
+                },
+                photo_url: null,
+                license_name: { financial: '', realEstate: '', IT: '', legal: '', other: '' },
+                adv_study_name: '',
+                personal_url: '',
+            };
+        },
+        created() { this.initial(); },
+        computed: {
+            isMale() { return this.fund.sex === '1' || this.fund.sex === 1; },
+            enableOtherSpcId() { return this.status.special.id.includes(4) || this.status.special.id.includes('4'); },
+            selectImmunity() {
+                const sexVal = this.fund.sex === '' ? 0 : parseInt(this.fund.sex);
+                const selectedVal = this.status.ms.state === '' ? 0 : parseInt(this.status.ms.state);
+                if (sexVal === 1 && selectedVal === 3) {
+                    return true;
+                }
+                return false;
+            },
+            enableOtherFocus() { return this.status.focus.items.includes(7) || this.status.focus.items.includes('7'); },
+            enableCriminalReason() { return this.q_and_a.criminal_record.exists === '1' || this.q_and_a.criminal_record.exists === 1; },
+            enableNotifyName() { return this.q_and_a.notify.agree === '1' || this.q_and_a.notify.agree === 1; },
+        },
+        methods: {
+            initial() {
+                getMethod('/FrontAPI/Job/JobInfos', toggleLoading(true), (res) => { this.jobs = res; toggleLoading(false); }, true);
+            },
+            onFileChange(targetId, type) {
+                const fileList = $(`#${targetId}`).prop('files');
+                if (!fileList.length) {
+                    return false;
+                }
+
+                switch (type) {
+                    case 'photo':
+                        this.photo = fileList[0];
+                        this.photo_url = URL.createObjectURL(fileList[0]);
+                        break;
+                    case 'attachment':
+                        this.attachments = [...this.attachments, ...fileList];
+                        break;
+                }
+                //$(`#${targetId}`).val(null);
+            },
+            addExperience() {
+                const len = this.experiences.length;
+                this.experiences.push({
+                    sn: len + 1,
+                    agency: '',
+                    jobTitle: '',
+                    period_start: '',
+                    period_end: '',
+                    salary: { standard: '', amount: '' },
+                    leaving_reason: '',
+                });
+
+                this.experiences.map((x, i) => { x.sn = i + 1; });
+                console.log(this.experiences);
+            },
+            removeExperience(sn) {
+                this.experiences = this.experiences.filter(e => e.sn !== sn);
+                this.experiences.map((x, i) => { x.sn = i + 1; });
+            },
+            next() {
+                if (this.currStep === 1) {
+                    let arr = new Array();
+                    judgeValidate('job-apply', this.fund.apply_job, 'div', 'col-md-3', arr);
+                    judgeValidate('photo', this.photo, 'div', 'col-md-3', arr);
+                    judgeValidate('name', this.fund.name, 'div', 'col-md-3', arr);
+                    judgeValidate('birthday', this.fund.birthday, 'div', 'col-md-3', arr);
+                    judgeValidate('male', this.fund.sex, 'div', 'col-md-3', arr);
+                    judgeValidate('unmarried', this.fund.marriage, 'div', 'col-md-3', arr);
+                    judgeValidate('phone', this.fund.phone, 'div', 'col-md-3', arr);
+                    judgeValidate('email-account', this.fund.email.account, 'div', 'col-md-3', arr);
+                    judgeValidate('email-host', this.fund.email.host, 'div', 'col-md-3', arr);
+                    judgeValidate('address', this.fund.address, 'div', 'col-md-6', arr);
+                    judgeValidate('school-1', this.fund.edu1.school, 'div', 'col-md-3', arr);
+                    judgeValidate('major-1', this.fund.edu1.major, 'div', 'col-md-3', arr);
+                    judgeValidate('day-1', this.fund.edu1.don, 'div', 'col-md-1', arr);
+                    judgeValidate('graduate-1', this.fund.edu1.goq, 'div', 'col-md-1', arr);
+                    judgeValidate('period-start-1', this.fund.edu1.start, 'div', 'col-md-4', arr);
+                    judgeValidate('period-end-1', this.fund.edu1.end, 'div', 'col-md-4', arr);
+                    judgeValidate('school-2', this.fund.edu2.school, 'div', 'col-md-3', arr);
+                    judgeValidate('major-2', this.fund.edu2.major, 'div', 'col-md-3', arr);
+                    judgeValidate('day-2', this.fund.edu2.don, 'div', 'col-md-1', arr);
+                    judgeValidate('graduate-2', this.fund.edu2.goq, 'div', 'col-md-1', arr);
+                    judgeValidate('period-start-2', this.fund.edu2.start, 'div', 'col-md-4', arr);
+                    judgeValidate('period-end-2', this.fund.edu2.end, 'div', 'col-md-4', arr);
+
+                    if (arr.filter(x => !x).length > 0) {
+                        return false;
+                    }
+
+                    if ($('#photo').val() !== '' && !this.photo) {
+                        showTestAlert('請上傳相片後再進入下一階段');
+                        return false;
+                    }
+                }
+
+                if (this.currStep === 2) {
+                    let arr = new Array();
+                    $.each(this.experiences, function (i, exp) {
+                        judgeValidate(`exp-agency-${exp.sn}`, exp.agency, 'td', '', arr);
+                        judgeValidate(`exp-jobTitle-${exp.sn}`, exp.jobTitle, 'td', '', arr);
+                        judgeValidate(`exp-period-start-${exp.sn}`, exp.period_start, 'td', '', arr);
+                        judgeValidate(`exp-period-end-${exp.sn}`, exp.period_end, 'td', '', arr);
+                        judgeValidate(`rdoMonthly-${exp.sn}`, exp.salary.standard, 'td', '', arr);
+                        judgeValidate(`salary-amount-${exp.sn}`, exp.salary.amount, 'td', '', arr);
+                        judgeValidate(`leaving_reason-${exp.sn}`, exp.leaving_reason, 'td', '', arr);
+                    });
+
+                    if (arr.filter(x => !x).length > 0) {
+                        return false;
+                    }
+                }
+
+                if (this.currStep === 3) {
+                    let arr = new Array();
+                    judgeValidate_Checkbox('spc-status', this.status.special.id, arr);
+                    if (this.enableOtherSpcId && this.status.special.other === '') {
+                        judgeValidate('spc-other', this.status.special.other, 'div', 'col-md-6', arr);
+                    }
+                    judgeValidate_Checkbox('eco-status', this.status.eco, arr);
+                    if (this.isMale) {
+                        judgeValidate('ms-status-1', this.status.ms.state, 'div', 'col-md-6', arr);
+                        if (this.selectImmunity && this.status.ms.reason === '') {
+                            judgeValidate('ms-reason', this.status.ms.reason, 'div', 'col-md-6', arr);
+                        }
+                    }
+                    judgeValidate_Checkbox('focus-status', this.status.focus.items, arr);
+                    if (this.enableOtherFocus && this.status.focus.other === '') {
+                        judgeValidate('focus-other', this.status.focus.other, 'div', 'col-md-6', arr);
+                    }
+
+                    if (arr.filter(x => !x).length > 0) {
+                        return false;
+                    }
+                }
+
+                this.currStep++;
+                showStepPanel(this.currStep);
+            },
+            previous() {
+                this.currStep--;
+                showStepPanel(this.currStep);
+            },
+            submit() {
+                let arr = new Array();
+                judgeValidate('qa-1', this.q_and_a.charges, 'div', 'col-md-3', arr);
+                judgeValidate('qa-2', this.q_and_a.registration_day, 'div', 'col-md-3', arr);
+                if (!this.q_and_a.expected_salary.negotiable) {
+                    judgeValidate('qa-3-lowest', this.q_and_a.expected_salary.lowest, 'div', 'col-md-6', arr);
+                    judgeValidate('qa-3-highest', this.q_and_a.expected_salary.highest, 'div', 'col-md-6', arr);
+                }
+                judgeValidate('qa-4-false', this.q_and_a.criminal_record.exists, 'div', 'col-md-6', arr);
+                judgeValidate('qa-5-true', this.q_and_a.notify.agree, 'div', 'col-md-6', arr);
+                judgeValidate('qa-8', this.q_and_a.motivation, 'div', 'col-md-6', arr);
+
+                if (arr.filter(x => !x).length > 0) {
+                    return false;
+                }
+
+                if (this.q_and_a.motivation.length < 100) {
+                    showTestAlert('應徵動機請最少輸入100字');
+                    return false;
+                }
+
+                let formData = new FormData();
+                formData.append("photo", this.photo);
+                $.each([...this.attachments], (i, f) => {
+                    formData.append("attachments", f);
+                });
+                formData.append("resume", JSON.stringify({
+                    basicInfo: { ...this.fund },
+                    experiences: [ ...this.experiences ],
+                    status: { ...this.status },
+                    QA: { ...this.q_and_a },
+                }));
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/API/Profile/SubmitForm',
+                    success: function (data) {
+                        const protocol = $(location).attr('protocol');
+                        const host = $(location).attr('host');
+                        $(location).attr('href', `${protocol}//${host}${data.goTo}`);
+                    },
+                    error: function (error) { alert('上傳失敗'); },
+                    async: true,
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                });
+            },
+            chkboxesChange(name) {
+                let atLeastOneChecked = false;
+                const chkList = $(`input[name="${name}"]`);
+                $.each(chkList, (i) => {
+                    if (chkList[i].checked) {
+                        atLeastOneChecked = true;
+                    }
+                });
+
+                if (atLeastOneChecked) {
+                    $.each(chkList, (i) => { $(chkList[i]).prop('required', false); });
+                    chkList.closest('div[class^="col-md-6"]');
+                } else {
+                    $.each(chkList, (i) => { $(chkList[i]).prop('required', true); });
+                }
+            },
+            addLicence(type) {
+                switch (type) {
+                    case 1:
+                        if (this.license_name.financial && this.license_name.financial !== '') {
+                            this.status.license.financial.push(this.license_name.financial);
+                            this.license_name.financial = '';
+                        }
+                        break;
+                    case 2:
+                        if (this.license_name.realEstate && this.license_name.realEstate !== '') {
+                            this.status.license.realEstate.push(this.license_name.realEstate);
+                            this.license_name.realEstate = '';
+                        }
+                        break;
+                    case 3:
+                        if (this.license_name.IT && this.license_name.IT !== '') {
+                            this.status.license.IT.push(this.license_name.IT);
+                            this.license_name.IT = '';
+                        }
+                        break;
+                    case 4:
+                        if (this.license_name.legal && this.license_name.legal !== '') {
+                            this.status.license.legal.push(this.license_name.legal);
+                            this.license_name.legal = '';
+                        }
+                        break;
+                    case 5:
+                        if (this.license_name.other && this.license_name.other !== '') {
+                            this.status.license.other.push(this.license_name.other);
+                            this.license_name.other = '';
+                        }
+                        break;
+                }
+            },
+            removeLicense(type, name) {
+                switch (type) {
+                    case 1:
+                        this.status.license.financial = this.status.license.financial.filter(l => l !== name);
+                        break;
+                    case 2:
+                        this.status.license.realEstate = this.status.license.realEstate.filter(l => l !== name);
+                        break;
+                    case 3:
+                        this.status.license.IT = this.status.license.IT.filter(l => l !== name);
+                        break;
+                    case 4:
+                        this.status.license.legal = this.status.license.legal.filter(l => l !== name);
+                        break;
+                    case 5:
+                        this.status.license.other = this.status.license.other.filter(l => l !== name);
+                        break;
+                }
+            },
+            addAdvStudy() {
+                if (this.adv_study_name && this.adv_study_name !== '') {
+                    this.q_and_a.advanced_study.push(this.adv_study_name);
+                    this.adv_study_name = '';
+                }
+            },
+            removeAdvStudy(name) {
+                this.q_and_a.advanced_study = this.q_and_a.advanced_study.filter(s => s !== name);
+            },
+            removeAttachment(item) {
+                this.attachments = this.attachments.filter(a => a !== item);
+            },
+            addPersonalUrl() {
+                if (this.personal_url && this.personal_url !== '') {
+                    this.q_and_a.personal_urls.push(this.personal_url);
+                    this.personal_url = '';
+                }
+            },
+            removePersonalUrl(name) {
+                this.q_and_a.personal_urls = this.q_and_a.personal_urls.filter(p => p !== name);
+            },
+            chgEvent() {
+                console.log(this.q_and_a.expected_salary.negotiable);
+            }
+        },
+    });
+    app.mount('#FormCreateSteps');
+
+    function showStepPanel(step) {
+        $('.bs-stepper-pane').removeClass('active');
+        setTimeout(() => {
+            $('.bs-stepper-pane').removeClass('dstepper-block').addClass('dstepper-none');
+            $(`.bs-stepper-pane[id="form-step-${step}"]`).removeClass('dstepper-none').addClass('dstepper-block active');
+        }, 400);
+    }
+
+    function judgeValidate(id, value, pTag, pClass, resArr) {
+        if ($(`#${id}`).length > 0) {
+            if (!value || value === '' || value.length === 0) {
+                let $parent;
+                if (!pClass) {
+                    $parent = $(`#${id}`).closest(`${pTag}`);
+                } else {
+                    $parent = $(`#${id}`).closest(`${pTag}[class^="${pClass}"]`);
+                }
+                //let $parent = $(`#${id}`).closest(`${pTag}[class^="${pClass}"]`);
+                setValidateClass($parent, 'was-validated');
+
+                resArr.push(false);
+                return;
+            }
+        }
+        resArr.push(true);
+    }
+
+    function judgeValidate_Checkbox(name, value, resArr) {
+        let checkboxes = $(`input[name="${name}"]`);
+        if (!value || value.length === 0) {
+            let $parent = checkboxes.closest('div[class^="col-md-6"]');
+            setValidateClass($parent, 'was-validated');
+
+            resArr.push(false);
+            return;
+        }
+        resArr.push(true);
+    }
+
+    function setValidateClass(element, className) {
+        $(element).removeClass(className);
+        $(element).addClass(className);
+    }
+
+    function showTestAlert(message) {
+        $('#alert-message').html(message);
+        $('#form-alert').toast({ delay: 2000 });
+        $('#form-alert').toast('show');
+    }
+</script>

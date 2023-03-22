@@ -1,0 +1,77 @@
+﻿@{
+    ViewData["Title"] = "修改密碼";
+
+    Layout = "../../../../Views/Shared/Layout/_LoginLayout";
+}
+
+<div class="authentication-inner py-4">
+    <div class="card">
+        <div class="card-body">
+            <div class="app-brand justify-content-center">
+                <span class="app-brand-text demo text-body fw-bolder">人力資源系統</span>
+            </div>
+            <h4 class="mb-2">修改密碼</h4>
+            <div class="mb-3">
+                <label for="old-pwd" class="form-label"><span style="color: red;">*</span>舊密碼</label>
+                <div class="input-group input-group-merge">
+                    <input id="old-pwd" name="old-pwd" type="password" class="form-control" placeholder="請輸入舊密碼" />
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="new-pwd" class="form-label"><span style="color: red;">*</span>新密碼</label>
+                <div class="input-group input-group-merge">
+                    <input id="new-pwd" name="new-pwd" type="password" class="form-control" placeholder="請輸入新密碼" />
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="confirm-pwd" class="form-label"><span style="color: red;">*</span>確認密碼</label>
+                <div class="input-group input-group-merge">
+                    <input id="confirm-pwd" name="confirm-pwd" type="password" class="form-control" placeholder="請重新輸入新密碼" onkeyup="confirmPwd(event)" />
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary d-grid w-100" onclick="submitPwd()">送出</button>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function confirmPwd(e) {
+        const newPwd = $('#new-pwd').val();
+        const cfm = $(e.target).val();
+
+        let parentEl = $(e.target).parent();
+        const groupText = parentEl.find('.input-group-text');
+        groupText.remove();
+
+        if (cfm !== newPwd) {
+            parentEl.append('<span class="input-group-text"><i class="tf-icons bx bx-x" style="color: #ff3e1d; font-size: 1.5rem;"></i></span>');
+        } else {
+            parentEl.append('<span class="input-group-text"><i class="tf-icons bx bx-check" style="color: #71dd37; font-size: 1.5rem;"></i></span>');
+        }
+    }
+
+    function submitPwd() {
+        const oldPwd = $('#old-pwd').val(), newPwd = $('#new-pwd').val(), cfmPwd = $('#confirm-pwd').val();
+        if (oldPwd === '' || newPwd === '' || cfmPwd === '') {
+            alert('請填妥所有必填寫欄位');
+        }
+
+        const notUniform = $('.tf-icons.bx.bx-x');
+        if (notUniform.length > 0) {
+            alert('請確認新密密碼重複輸入正確');
+        }
+
+        let result = false;
+        postMethod('/API/Pwd/Modify', null, (res) => { result = res; }, false, {
+            pwd: $('#old-pwd').val(),
+            newPwd: $('#new-pwd').val(),
+            cfmPwd: $('#confirm-pwd').val(),
+        });
+
+        if (result) {
+            alert('密碼變更成功，請重新登入');
+            getMethod('/Login/Logout', null, (res) => { }, false);
+            $(location).prop('href', '/')
+        }
+    }
+</script>

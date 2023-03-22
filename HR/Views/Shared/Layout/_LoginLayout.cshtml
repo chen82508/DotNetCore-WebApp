@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="light-style customizer-hide">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <meta name="description" content="" />
+    <title>@ViewData["Title"]</title>
+    <link rel="icon" type="image/x-icon" href="~/img/favicon/favicon.ico" />
+
+    @await Html.PartialAsync("Partial/_HeadStyleSheetPartial")
+
+    <!-- Page CSS -->
+    <!-- Page -->
+    <link rel="stylesheet" href="~/vendor/css/pages/page-auth.css" />
+
+    @await Html.PartialAsync("Partial/_HeadScriptsPartial")
+</head>
+<body>
+    <div class="container-xxl">
+        <div class="authentication-wrapper authentication-basic container-p-y">
+            @RenderBody()
+        </div>
+    </div>
+    @await Html.PartialAsync("Partial/_FootScriptsPartial")
+    
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+</body>
+</html>

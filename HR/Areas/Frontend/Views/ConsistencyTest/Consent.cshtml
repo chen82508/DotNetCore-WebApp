@@ -1,0 +1,28 @@
+﻿@{
+    ViewData["Title"] = "測驗說明";
+    Layout = "../../../../Views/Shared/Layout/_BlankLayout";
+}
+<div class="card mb-5">
+    <form method="post" action="/API/ConsistencyTest/Start">
+        <div class="card-header d-flex justify-content-center mt-3">
+            <h3>測驗說明</h3>
+        </div>
+        <div class="card-body">
+            <p class="mx-5">
+                親愛的求職者，您好
+                <br />
+                接下來將進行一致性測驗，注意事項如下：
+            </p>
+        </div>
+        <hr class="m-0" style="height: 0.25rem;" />
+        <div class="card-body">
+            <ol class="mx-5 mt-3">
+                <li style="padding:.58rem .9375rem;">本測驗分為三步驟，請詳閱每步驟的說明後再進行作答。</li>
+                <li style="padding:.58rem .9375rem;">本測驗限時15分鐘，請於時間內作答完畢並送出。</li>
+            </ol>
+        </div>
+        <div class="card-footer text-center">
+            <button class="btn btn-primary" type="submit">確定並開始</button>
+        </div>
+    </form>
+</div>

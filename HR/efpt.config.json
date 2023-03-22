@@ -1,0 +1,125 @@
+﻿{
+   "CodeGenerationMode": 2,
+   "ContextClassName": "HRSysContext",
+   "ContextNamespace": null,
+   "DefaultDacpacSchema": null,
+   "FilterSchemas": false,
+   "IncludeConnectionString": false,
+   "ModelNamespace": null,
+   "OutputContextPath": "Database",
+   "OutputPath": "Models\/Entity",
+   "PreserveCasingWithRegex": true,
+   "ProjectRootNamespace": "HR",
+   "Schemas": null,
+   "SelectedHandlebarsLanguage": 0,
+   "SelectedToBeGenerated": 0,
+   "Tables": [
+      {
+         "Name": "[dbo].[FE_CONSISTENCY_TEST]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FE_RESUME]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FE_RESUME_ATTACHMENT]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[HR_HUMATTTACH]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[HR_HUMIFO_MST]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[HR_HUMSTS_CHGHIS]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[HR_HUMVAC_RELATE]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[HR_INTERVW_HIS]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[HR_JOBTYP]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[HR_JOBTYP_TAG]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[HR_MESSAGE]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[HR_MESSAGE_TAG]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[HR_VACANCY_HIS]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[HR_VACMST]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[HR_VACTYP_RELATE]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[SY_OPTION]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[SY_OPTION_TAG]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[SY_USER]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VW_HUMIFO_MST]",
+         "ObjectType": 3
+      },
+      {
+         "Name": "[dbo].[VW_HUMVAC_RELATE]",
+         "ObjectType": 3
+      },
+      {
+         "Name": "[dbo].[VW_VAC_OVERVW]",
+         "ObjectType": 3
+      },
+      {
+         "Name": "[dbo].[VW_VACHUM_CHGHIS_STAT]",
+         "ObjectType": 3
+      }
+   ],
+   "UiHint": "WIN-UKFTQ356MF9.PtmbHRsys",
+   "UseBoolPropertiesWithoutDefaultSql": false,
+   "UseDatabaseNames": true,
+   "UseDbContextSplitting": false,
+   "UseFluentApiOnly": false,
+   "UseHandleBars": false,
+   "UseHierarchyId": false,
+   "UseInflector": false,
+   "UseLegacyPluralizer": false,
+   "UseManyToManyEntity": false,
+   "UseNoConstructor": false,
+   "UseNoDefaultConstructor": false,
+   "UseNoNavigations": false,
+   "UseNoObjectFilter": false,
+   "UseNodaTime": false,
+   "UseNullableReferences": false,
+   "UseSchemaFolders": false,
+   "UseSpatial": false,
+   "UseT4": false
+}

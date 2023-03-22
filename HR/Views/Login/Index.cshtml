@@ -1,0 +1,47 @@
+﻿@{
+    ViewData["Title"] = "人力資源系統-登入";
+    TempData["_returnUrl"] = @Model;
+}
+@model string
+
+<div class="authentication-inner">
+    <div class="card">
+        <div class="card-body">
+            <div class="app-brand justify-content-center">
+                <span class="app-brand-text demo text-body fw-bolder">人力資源系統-登入</span>
+            </div>
+            <h4 class="mb-2">歡迎來到人力資源系統！ 👋</h4>
+            <p class="mb-4">請登入您的帳號並開始使用</p>
+
+            <form id="formAuthentication" class="mb-3" asp-controller="Login" asp-action="Login" method="post">
+                <div class="mb-3">
+                    <label for="account" class="form-label">帳號</label>
+                    <input id="account" name="user-id" type="text" class="form-control" placeholder="請輸入您的帳號" autofocus />
+                </div>
+                <div class="mb-3 form-password-toggle">
+                    <div class="d-flex justify-content-between">
+                        <label for="password" class="form-label">密碼</label>
+                        @*<a asp-controller="Login" asp-action="ForgetPassword">
+                            <small>忘記密碼？</small>
+                        </a>*@
+                    </div>
+                    <div class="input-group input-group-merge">
+                        <input id="password" name="password" type="password" class="form-control"
+                            placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
+                            aria-describedby="password" />
+                        <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
+                    </div>
+                </div>
+                @*<div class="mb-3">
+                    <div class="form-check">
+                        <input id="remember-me" type="checkbox" class="form-check-input" />
+                        <label for="remember-me" class="form-check-label"> 記住我 </label>
+                    </div>
+                </div>*@
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary d-grid w-100">登入</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

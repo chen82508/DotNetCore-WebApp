@@ -1,0 +1,26 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "vue@3.2.33",
+      "destination": "wwwroot/vue/"
+    },
+    {
+      "library": "vue-router@4.0.14",
+      "destination": "wwwroot/vue-router/"
+    },
+    {
+      "library": "vuex@4.0.2",
+      "destination": "wwwroot/vuex/"
+    },
+    {
+      "library": "axios@0.27.2",
+      "destination": "wwwroot/axios/"
+    },
+    {
+      "library": "apexcharts@3.35.1",
+      "destination": "wwwroot/apexcharts/"
+    }
+  ]
+}
